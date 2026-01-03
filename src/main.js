@@ -6,6 +6,7 @@ import router from './router'
 
 import 'bulma/css/bulma.min.css'
 import '@fortawesome/fontawesome-free/css/all.min.css'
+import './assets/main.css'
 
 const app = createApp(App)
 
