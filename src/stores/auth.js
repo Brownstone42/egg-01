@@ -92,8 +92,14 @@ export const useAuthStore = defineStore('auth', {
         startDesktopLineLogin() {
             console.log('Starting LINE Desktop Login...');
             
-            const lineChannelId = '2008872756';
-            const redirectUri = 'https://5173-firebase-egg-01-1767462759682.cluster-m7dwy2bmizezqukxkuxd55k5ka.cloudworkstations.dev/line-callback';
+            // Read config from environment variables
+            const lineChannelId = import.meta.env.VITE_LINE_CLIENT_ID;
+            const redirectUri = import.meta.env.VITE_LINE_REDIRECT_URI;
+
+            if (!lineChannelId || !redirectUri) {
+                console.error("VITE_LINE_CLIENT_ID or VITE_LINE_REDIRECT_URI is not set in your .env file.");
+                return;
+            }
 
             const state = generateRandomString(16);
             sessionStorage.setItem('line_login_state', state);
@@ -117,8 +123,16 @@ export const useAuthStore = defineStore('auth', {
             }
             sessionStorage.removeItem('line_login_state');
 
+            // Get redirect URI from environment variable to pass to the function
+            const redirectUri = import.meta.env.VITE_LINE_REDIRECT_URI;
+             if (!redirectUri) {
+                console.error("VITE_LINE_REDIRECT_URI is not set in your .env file.");
+                return;
+            }
+
             const lineAuthHandler = httpsCallable(functions, 'lineAuthHandler');
-            const result = await lineAuthHandler({ code });
+            // Pass both code and redirectUri to the backend function
+            const result = await lineAuthHandler({ code, redirectUri });
 
             if (!result.data || !result.data.token) {
                 throw new Error('No custom token returned from backend');

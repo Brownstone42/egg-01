@@ -76,10 +76,6 @@ exports.liffAuthHandler = functions.region("asia-southeast1").https.onCall(async
             throw new functions.https.HttpsError('internal', 'Could not get user profile from LINE.');
         }
         
-        // Note: /v2/profile does not return email. We get it from the ID token in the LIFF SDK on the client if needed.
-        // For now, we will proceed without it.
-
-        // 2. Find or create a user in Firebase Auth.
         const uid = await findOrCreateFirebaseUser(lineProfile.userId, lineProfile.displayName, lineProfile.pictureUrl, null /* email */);
 
         // 3. Create a custom Firebase token.
@@ -95,13 +91,12 @@ exports.liffAuthHandler = functions.region("asia-southeast1").https.onCall(async
 });
 
 
-// --- Desktop LINE Login Handler (Refactored) ---
+// --- Desktop LINE Login Handler (Refactored & FIXED for Production) ---
 exports.lineAuthHandler = functions.region("asia-southeast1").https.onCall(async (data, context) => {
-    const code = data.code;
-    const redirectUri = "https://5173-firebase-egg-01-1767462759682.cluster-m7dwy2bmizezqukxkuxd55k5ka.cloudworkstations.dev/line-callback";
+    const { code, redirectUri } = data; // Receive redirectUri from client
 
-    if (!code) {
-        throw new functions.https.HttpsError('invalid-argument', 'Authorization code is required');
+    if (!code || !redirectUri) {
+        throw new functions.https.HttpsError('invalid-argument', 'Authorization code and redirectUri are required');
     }
 
     try {
@@ -110,7 +105,7 @@ exports.lineAuthHandler = functions.region("asia-southeast1").https.onCall(async
             new URLSearchParams({
                 grant_type: 'authorization_code',
                 code: code,
-                redirect_uri: redirectUri,
+                redirect_uri: redirectUri, // Use the provided redirectUri
                 client_id: LINE_CHANNEL_ID,
                 client_secret: LINE_CHANNEL_SECRET,
             }), {
