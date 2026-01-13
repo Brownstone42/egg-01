@@ -22,6 +22,26 @@
 
         <div id="navbarBasicExample" class="navbar-menu" :class="{ 'is-active': isMenuActive }">
             <div class="navbar-start">
+                <!-- Mobile Profile Section (Visible only on Touch/Mobile) -->
+                <template v-if="authStore.user">
+                    <div class="navbar-item is-flex is-align-items-center is-hidden-desktop has-background-light">
+                        <figure class="image is-24x24 mr-2" v-if="authStore.user.photoURL">
+                            <img
+                                class="is-rounded"
+                                :src="authStore.user.photoURL"
+                                alt="User avatar"
+                            />
+                        </figure>
+                        <span class="icon is-small mr-2" v-else>
+                            <i class="fas fa-user-circle"></i>
+                        </span>
+                        <span class="has-text-weight-bold">
+                            {{ authStore.user.displayName || authStore.user.phoneNumber }}
+                            <span v-if="isLineLogin" class="tag is-success is-light ml-2">LINE</span>
+                        </span>
+                    </div>
+                </template>
+
                 <template v-if="authStore.user">
                     <router-link to="/dashboard" class="navbar-item">Dashboard</router-link>
                 </template>
@@ -40,7 +60,8 @@
                 </div>
 
                 <template v-if="authStore.user">
-                    <div class="navbar-item is-flex is-align-items-center">
+                    <!-- Desktop Profile Section (Hidden on Touch/Mobile) -->
+                    <div class="navbar-item is-flex is-align-items-center is-hidden-touch">
                         <figure class="image is-24x24 mr-2" v-if="authStore.user.photoURL">
                             <img
                                 class="is-rounded"
@@ -59,7 +80,9 @@
                             >
                         </span>
                     </div>
-                    <div class="navbar-item">
+                    
+                    <!-- Logout Button (Hidden in LIFF) -->
+                    <div class="navbar-item" v-if="!isLiffView">
                         <div class="buttons">
                             <a class="button is-light" @click="authStore.logout"> Logout </a>
                         </div>
@@ -182,6 +205,7 @@
 <script>
 import { useAuthStore } from '../stores/auth'
 import { mapStores } from 'pinia'
+import { isInLiff } from '../liff' // Import isInLiff
 
 export default {
     data() {
@@ -193,6 +217,7 @@ export default {
             otpCode: '',
             isLoading: false,
             errorMessage: '',
+            isLiffView: isInLiff(), // Check LIFF status
         }
     },
     computed: {
