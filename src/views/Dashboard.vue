@@ -26,7 +26,7 @@
                             >
                                 <span class="icon-text">
                                     <span class="icon"><i class="fas fa-user"></i></span>
-                                    <span>Update My Info</span>
+                                    <span>My Info</span>
                                 </span>
                             </a>
                         </li>

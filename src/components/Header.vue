@@ -25,6 +25,9 @@
                 <template v-if="authStore.user">
                     <router-link to="/dashboard" class="navbar-item">Dashboard</router-link>
                 </template>
+
+                <!-- Tracking Menu Item (Always Visible) -->
+                <router-link to="/tracking" class="navbar-item">Tracking</router-link>
             </div>
 
             <div class="navbar-end">

@@ -1,6 +1,6 @@
 <template>
     <div class="box">
-        <h2 class="title is-4 mb-4">Update My Info</h2>
+        <h2 class="title is-4 mb-4">My Info</h2>
 
         <div class="content">
             <p>Manage your account connections here.</p>
@@ -69,6 +69,43 @@
             <!-- Message for LINE Users -->
             <div v-else class="notification is-info is-light">
                 <p>You are logged in via LINE. Account linking is disabled for LINE users.</p>
+            </div>
+
+            <hr />
+
+            <!-- Claim Order Section -->
+            <h3 class="title is-5">Claim Order</h3>
+            <p class="mb-3">
+                Bought something as a guest? Enter the Order ID below to link it to your account.
+            </p>
+
+            <div class="field has-addons">
+                <div class="control is-expanded">
+                    <input
+                        class="input"
+                        type="text"
+                        placeholder="Enter Order ID (e.g. chrg_test_...)"
+                        v-model="claimOrderId"
+                    />
+                </div>
+                <div class="control">
+                    <button
+                        class="button is-primary"
+                        :class="{ 'is-loading': claimingLoading }"
+                        @click="handleClaimOrder"
+                        :disabled="!claimOrderId"
+                    >
+                        Add Order
+                    </button>
+                </div>
+            </div>
+
+            <div
+                v-if="claimMessage"
+                class="notification mt-3 is-light"
+                :class="claimMessageType === 'success' ? 'is-success' : 'is-danger'"
+            >
+                {{ claimMessage }}
             </div>
         </div>
 
@@ -140,6 +177,8 @@
 import { useAuthStore } from '@/stores/auth'
 import { mapStores } from 'pinia'
 import { getAuth, linkWithPhoneNumber, RecaptchaVerifier } from 'firebase/auth'
+import { httpsCallable } from 'firebase/functions'
+import { functions } from '@/firebase'
 
 export default {
     props: {
@@ -150,6 +189,7 @@ export default {
     },
     data() {
         return {
+            // Phone Linking Data
             showLinkPhoneModal: false,
             phoneToLink: '',
             otpSent: false,
@@ -157,6 +197,12 @@ export default {
             confirmationResult: null,
             linkingLoading: false,
             linkErrorMessage: '',
+
+            // Claim Order Data
+            claimOrderId: '',
+            claimingLoading: false,
+            claimMessage: '',
+            claimMessageType: '', // 'success' or 'error'
         }
     },
     computed: {
@@ -173,6 +219,36 @@ export default {
         },
     },
     methods: {
+        // --- Claim Order Logic ---
+        async handleClaimOrder() {
+            if (!this.claimOrderId) return
+
+            this.claimingLoading = true
+            this.claimMessage = ''
+            this.claimMessageType = ''
+
+            try {
+                const claimOrderFunc = httpsCallable(functions, 'claimOrder')
+                const result = await claimOrderFunc({ orderId: this.claimOrderId })
+
+                if (result.data.success) {
+                    this.claimMessage = 'Order added to your account successfully!'
+                    this.claimMessageType = 'success'
+                    this.claimOrderId = '' // Clear input
+                    // Optional: You might want to emit an event to refresh the order list
+                    // this.$emit('order-claimed');
+                }
+            } catch (error) {
+                console.error('Claim Order Error:', error)
+                this.claimMessageType = 'error'
+                // Display the error message from the backend if available
+                this.claimMessage = error.message || 'Failed to claim order. Please try again.'
+            } finally {
+                this.claimingLoading = false
+            }
+        },
+
+        // --- Account Linking Logic ---
         async linkGoogle() {
             if (this.isGoogleLinked) return
             const success = await this.authStore.linkGoogle()

@@ -67,47 +67,8 @@
         <div class="modal" :class="{ 'is-active': showDetailModal }">
             <div class="modal-background" @click="closeDetailModal"></div>
             <div class="modal-content">
-                <div class="box" v-if="selectedSub">
-                    <h3 class="title is-4 mb-2">Subscription Details</h3>
-                    <p class="subtitle is-6 has-text-grey">Order ID: {{ selectedSub.id }}</p>
-
-                    <div class="columns">
-                        <div class="column is-6">
-                            <p><strong>Pack:</strong> {{ selectedSub.pack }}</p>
-                            <p><strong>Recipient:</strong> {{ selectedSub.recipientName }}</p>
-                            <p><strong>Phone:</strong> {{ selectedSub.phoneNumber }}</p>
-                        </div>
-                        <div class="column is-6">
-                            <p>
-                                <strong>Status:</strong>
-                                <span class="tag is-success is-light">{{
-                                    selectedSub.status
-                                }}</span>
-                            </p>
-                            <p><strong>Schedule:</strong> {{ selectedSub.deliverySchedule }}</p>
-                            <p><strong>Note:</strong> {{ selectedSub.noteToDriver || '-' }}</p>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <p><strong>Address:</strong> {{ selectedSub.deliveryAddress }}</p>
-                    </div>
-
-                    <h4 class="title is-5 mt-5 mb-3">Delivery Timeline</h4>
-                    <div class="timeline">
-                        <div
-                            class="timeline-item"
-                            v-for="(date, index) in selectedSub.deliveryDates"
-                            :key="index"
-                        >
-                            <div class="timeline-marker" :class="getMarkerClass(date)"></div>
-                            <div class="timeline-content">
-                                <p class="heading">{{ formatDate(date) }}</p>
-                                <p>{{ getDeliveryStatusText(date) }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <!-- Use the shared component here -->
+                <OrderDetailDisplay v-if="selectedSub" :order="selectedSub" />
             </div>
             <button
                 class="modal-close is-large"
@@ -120,8 +81,12 @@
 
 <script>
 import { getFirestore, collection, query, where, getDocs, orderBy } from 'firebase/firestore'
+import OrderDetailDisplay from '@/components/OrderDetailDisplay.vue'
 
 export default {
+    components: {
+        OrderDetailDisplay,
+    },
     props: {
         user: {
             type: Object,
@@ -189,6 +154,7 @@ export default {
                 this.loading = false
             }
         },
+        // Keep simple format for the table row
         formatDate(date) {
             if (!date) return '-'
             return new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' }).format(date)
@@ -202,24 +168,7 @@ export default {
             if (sub.status === 'paid') return 'is-success is-light'
             return 'is-warning is-light'
         },
-        getMarkerClass(date) {
-            const now = new Date()
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-            const d = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-
-            if (d < today) return 'is-success'
-            if (d.getTime() === today.getTime()) return 'is-warning'
-            return ''
-        },
-        getDeliveryStatusText(date) {
-            const now = new Date()
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-            const d = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-
-            if (d < today) return 'Delivered'
-            if (d.getTime() === today.getTime()) return 'Out for Delivery'
-            return 'Scheduled'
-        },
+        // Removed duplicated logic that is now in OrderDetailDisplay
         openDetailModal(sub) {
             this.selectedSub = sub
             this.showDetailModal = true
@@ -233,33 +182,5 @@ export default {
 </script>
 
 <style scoped>
-/* Timeline CSS (Simple Vertical) */
-.timeline {
-    border-left: 2px solid #dbdbdb;
-    margin-left: 20px;
-    padding-left: 20px;
-}
-.timeline-item {
-    position: relative;
-    padding-bottom: 20px;
-}
-.timeline-marker {
-    position: absolute;
-    left: -26px; /* Adjust based on border/padding */
-    top: 5px;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: #dbdbdb;
-    border: 2px solid #fff;
-    box-shadow: 0 0 0 1px #dbdbdb;
-}
-.timeline-marker.is-success {
-    background: #48c774;
-    box-shadow: 0 0 0 1px #48c774;
-}
-.timeline-marker.is-warning {
-    background: #ffdd57;
-    box-shadow: 0 0 0 1px #ffdd57;
-}
+/* Removed duplicated timeline styles */
 </style>

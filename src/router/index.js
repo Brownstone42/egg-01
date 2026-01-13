@@ -3,7 +3,8 @@ import Home from '../views/Home.vue'
 import Subscription from '../views/Subscription.vue'
 import Success from '../views/Success.vue'
 import Dashboard from '../views/Dashboard.vue'
-import LineAuthCallback from '../views/LineAuthCallback.vue' // Import the new component
+import LineAuthCallback from '../views/LineAuthCallback.vue'
+import PublicTracking from '../views/PublicTracking.vue' // Import the new tracking page
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -29,9 +30,14 @@ const router = createRouter({
             component: Dashboard,
         },
         {
-            path: '/line-callback', // <-- CHANGED TO SIMPLER URL
+            path: '/line-callback',
             name: 'line-auth-callback',
             component: LineAuthCallback, 
+        },
+        {
+            path: '/tracking',
+            name: 'tracking',
+            component: PublicTracking, // Add the new route
         },
     ],
 })

@@ -35,8 +35,11 @@
             </div>
 
             <div class="buttons is-centered mt-6">
-                <!-- ปุ่มนี้จะนำไปสู่หน้า Dashboard ในอนาคต -->
-                <router-link to="/dashboard" class="button is-primary is-medium is-fullwidth">
+                <!-- Link to Public Tracking Page with Order ID -->
+                <router-link 
+                    :to="{ path: '/tracking', query: { orderId: orderDetails.orderId } }" 
+                    class="button is-primary is-medium is-fullwidth"
+                >
                     Track My Order
                 </router-link>
 
@@ -51,6 +54,7 @@ export default {
     data() {
         return {
             orderDetails: {
+                orderId: '', // Added orderId
                 pack: '',
                 recipientName: '',
                 phoneNumber: '',
@@ -70,6 +74,7 @@ export default {
         } else {
             // Fallback กรณีเข้าหน้านี้ตรงๆ (อาจจะ redirect กลับไปหน้าแรก หรือโชว์ข้อมูล mock)
             this.orderDetails = {
+                orderId: '',
                 pack: 'Unknown Pack',
                 recipientName: '-',
                 phoneNumber: '-',

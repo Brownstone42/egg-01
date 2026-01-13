@@ -387,14 +387,19 @@ export default {
                     const data = await res.json()
 
                     if (data.status === 'successful') {
+                        // FIX: Store the ID before clearing it
+                        const confirmedOrderId = this.currentChargeId;
+
                         this.paymentStatus = 'successful'
                         this.stopPolling()
-                        this.closePaymentModal()
+                        this.closePaymentModal() // This sets currentChargeId to null
 
                         this.$router.push({
                             name: 'success',
                             state: {
                                 orderDetails: {
+                                    // Use the stored variable
+                                    orderId: confirmedOrderId,
                                     pack: this.selectedPack,
                                     recipientName: this.formData.recipientName,
                                     phoneNumber: this.formData.phoneNumber,

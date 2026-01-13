@@ -139,6 +139,57 @@ exports.lineAuthHandler = functions.region("asia-southeast1").https.onCall(async
     }
 });
 
+// --- Claim Order Function (NEW) ---
+exports.claimOrder = functions.region("asia-southeast1").https.onCall(async (data, context) => {
+    // 1. Check if user is authenticated
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
+    }
+
+    const { orderId } = data;
+    if (!orderId) {
+        throw new functions.https.HttpsError('invalid-argument', 'The function must be called with one argument "orderId".');
+    }
+
+    const uid = context.auth.uid;
+    const orderRef = db.collection('orders').doc(orderId);
+
+    try {
+        // 2. Run a transaction to ensure atomic update
+        await db.runTransaction(async (transaction) => {
+            const orderDoc = await transaction.get(orderRef);
+
+            if (!orderDoc.exists) {
+                throw new functions.https.HttpsError('not-found', 'Order not found.');
+            }
+
+            const orderData = orderDoc.data();
+
+            // 3. Check ownership
+            if (orderData.userId !== 'guest_user') {
+                if (orderData.userId === uid) {
+                    throw new functions.https.HttpsError('already-exists', 'You already own this order.');
+                } else {
+                    throw new functions.https.HttpsError('permission-denied', 'This order already belongs to another user.');
+                }
+            }
+
+            // 4. Update ownership
+            transaction.update(orderRef, { userId: uid });
+        });
+
+        return { success: true, message: 'Order successfully claimed.' };
+
+    } catch (error) {
+        console.error("Claim Order Error:", error);
+        // Re-throw HttpsError so the client gets the correct code/message
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        throw new functions.https.HttpsError('internal', 'Unable to claim order.', error.message);
+    }
+});
+
 
 // --- Omise & Order Functions (Existing, Unchanged) ---
 
