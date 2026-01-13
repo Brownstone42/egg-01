@@ -1,12 +1,10 @@
 <template>
     <section class="hero is-large hero-banner">
-        <div class="hero-body">
-            <div class="container has-text-centered">
-                <h1 class="title has-text-white">Fresh Eggs, Delivered Weekly.</h1>
-                <h2 class="subtitle has-text-white">
-                    The best quality eggs from local farms, right to your doorstep.
-                </h2>
-            </div>
+        <div class="hero-body has-text-centered">
+            <h1 class="title has-text-white">Fresh Eggs, Delivered Weekly.</h1>
+            <h2 class="subtitle has-text-white">
+                The best quality eggs from local farms, right to your doorstep.
+            </h2>
         </div>
     </section>
 

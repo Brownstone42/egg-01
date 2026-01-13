@@ -14,7 +14,7 @@
 
         <!-- Map Container -->
         <div class="map-container mb-3" style="position: relative; height: 400px">
-            <GoogleMap
+            <GMap
                 ref="mapRef"
                 :api-key="apiKey"
                 style="width: 100%; height: 100%"
@@ -25,7 +25,7 @@
                 @idle="onIdle"
             >
                 <!-- เราไม่ใช้ Marker ปกติ แต่จะใช้หมุดลอยอยู่ตรงกลาง (Fixed Center Pin) -->
-            </GoogleMap>
+            </GMap>
 
             <!-- หมุดกลางจอ (Center Pin) -->
             <div class="center-marker">
@@ -51,98 +51,98 @@
     </div>
 </template>
 
-<script setup>
-import { ref, onMounted, defineProps, defineEmits } from 'vue'
-import { GoogleMap } from 'vue3-google-map'
+<script>
+import { GoogleMap as GMap } from 'vue3-google-map'
 
-const props = defineProps({
-    modelValue: {
-        type: String,
-        default: '',
+export default {
+    name: 'GoogleMapPicker',
+    components: {
+        GMap,
     },
-    error: {
-        type: Boolean,
-        default: false,
+    props: {
+        modelValue: {
+            type: String,
+            default: '',
+        },
+        error: {
+            type: Boolean,
+            default: false,
+        },
     },
-})
-
-const emit = defineEmits(['update:modelValue', 'update:coordinates'])
-
-// *** ใส่ API KEY ของคุณที่นี่ ***
-const apiKey = 'AIzaSyA5kC8KaF_zYamu764W4vHrsx0vFqnV-BU'
-
-const mapRef = ref(null)
-const searchInput = ref(null)
-const center = ref({ lat: 13.7563, lng: 100.5018 }) // Default Bangkok
-const currentCenter = ref(center.value)
-
-// ฟังก์ชันเมื่อแผนที่ถูกเลื่อน (เก็บพิกัดกลางจอปัจจุบันไว้ตลอด)
-const onCenterChanged = () => {
-    if (mapRef.value?.map) {
-        const c = mapRef.value.map.getCenter()
-        currentCenter.value = { lat: c.lat(), lng: c.lng() }
-    }
-}
-
-// ฟังก์ชันเมื่อหยุดเลื่อนแผนที่ (Idle) -> ทำ Reverse Geocoding
-const onIdle = async () => {
-    if (!mapRef.value?.map) return
-
-    // Update final coordinates to parent (ถ้าต้องการเก็บ lat/lng)
-    emit('update:coordinates', currentCenter.value)
-
-    // Reverse Geocoding
-    try {
-        const geocoder = new google.maps.Geocoder()
-        const response = await geocoder.geocode({ location: currentCenter.value })
-
-        if (response.results[0]) {
-            const address = response.results[0].formatted_address
-            emit('update:modelValue', address)
+    emits: ['update:modelValue', 'update:coordinates'],
+    data() {
+        return {
+            apiKey: 'AIzaSyA5kC8KaF_zYamu764W4vHrsx0vFqnV-BU',
+            center: { lat: 13.7563, lng: 100.5018 }, // Default Bangkok
+            currentCenter: { lat: 13.7563, lng: 100.5018 },
         }
-    } catch (e) {
-        console.error('Geocoder failed:', e)
-    }
-}
+    },
+    methods: {
+        onCenterChanged() {
+            const mapInstance = this.$refs.mapRef?.map
+            if (mapInstance) {
+                const c = mapInstance.getCenter()
+                this.currentCenter = { lat: c.lat(), lng: c.lng() }
+            }
+        },
+        async onIdle() {
+            const mapInstance = this.$refs.mapRef?.map
+            if (!mapInstance) return
 
-onMounted(() => {
-    // Setup Autocomplete Search
-    // รอให้ API โหลดเสร็จก่อน (vue3-google-map จัดการโหลดสคริปต์ให้ แต่ต้องรอจังหวะ map ready ในบางเคส หรือใช้ loader)
-    // วิธีที่ง่ายที่สุดคือใช้ setInterval เช็ค หรือใช้ Promise แต่ vue3-google-map โหลด async.
-    // เพื่อความชัวร์ เราจะรอ google object
+            // Update final coordinates to parent
+            this.$emit('update:coordinates', this.currentCenter)
 
-    const initAutocomplete = () => {
-        if (!window.google || !window.google.maps || !window.google.maps.places) {
-            setTimeout(initAutocomplete, 500)
-            return
-        }
+            // Reverse Geocoding
+            try {
+                if (window.google && window.google.maps) {
+                    const geocoder = new google.maps.Geocoder()
+                    const response = await geocoder.geocode({ location: this.currentCenter })
 
-        const autocomplete = new google.maps.places.Autocomplete(searchInput.value, {
-            fields: ['geometry', 'formatted_address'],
-        })
-
-        autocomplete.addListener('place_changed', () => {
-            const place = autocomplete.getPlace()
-
-            if (!place.geometry || !place.geometry.location) {
-                return // User entered name but didn't select suggestion
+                    if (response.results[0]) {
+                        const address = response.results[0].formatted_address
+                        this.$emit('update:modelValue', address)
+                    }
+                }
+            } catch (e) {
+                console.error('Geocoder failed:', e)
+            }
+        },
+        initAutocomplete() {
+            if (!window.google || !window.google.maps || !window.google.maps.places) {
+                setTimeout(this.initAutocomplete, 500)
+                return
             }
 
-            // ย้ายแผนที่ไปจุดที่เลือก
-            if (place.geometry.viewport) {
-                mapRef.value.map.fitBounds(place.geometry.viewport)
-            } else {
-                mapRef.value.map.setCenter(place.geometry.location)
-                mapRef.value.map.setZoom(17)
-            }
+            const searchInput = this.$refs.searchInput
+            const autocomplete = new google.maps.places.Autocomplete(searchInput, {
+                fields: ['geometry', 'formatted_address'],
+            })
 
-            // อัปเดตค่าทันทีจากผล Search
-            emit('update:modelValue', place.formatted_address)
-        })
-    }
+            autocomplete.addListener('place_changed', () => {
+                const place = autocomplete.getPlace()
 
-    initAutocomplete()
-})
+                if (!place.geometry || !place.geometry.location) {
+                    return // User entered name but didn't select suggestion
+                }
+
+                const mapInstance = this.$refs.mapRef.map
+                // ย้ายแผนที่ไปจุดที่เลือก
+                if (place.geometry.viewport) {
+                    mapInstance.fitBounds(place.geometry.viewport)
+                } else {
+                    mapInstance.setCenter(place.geometry.location)
+                    mapInstance.setZoom(17)
+                }
+
+                // อัปเดตค่าทันทีจากผล Search
+                this.$emit('update:modelValue', place.formatted_address)
+            })
+        },
+    },
+    mounted() {
+        this.initAutocomplete()
+    },
+}
 </script>
 
 <style scoped>

@@ -1,6 +1,8 @@
 import { initializeApp } from 'firebase/app'
 import { getAnalytics } from 'firebase/analytics'
 import { getAuth } from 'firebase/auth'
+import { getFirestore } from 'firebase/firestore'
+import { getFunctions } from 'firebase/functions' // Import functions
 
 // TODO: Replace with your app's Firebase project configuration
 const firebaseConfig = {
@@ -16,5 +18,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 const auth = getAuth(app)
 const analytics = getAnalytics(app)
+const db = getFirestore(app)
+const functions = getFunctions(app, 'asia-southeast1') // Initialize functions
 
-export { auth, analytics }
+export { auth, analytics, db, functions } // Export functions
