@@ -1,26 +1,51 @@
 html,
 body {
     background-color: #f5f2e9; /* Cream background */
+    font-family: 'Prompt', sans-serif; /* Set Prompt as default font */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .title,
 .subtitle {
     color: #363636; /* Dark grey text */
+    font-family: 'Prompt', sans-serif;
 }
 
 .box {
     background-color: #fff; /* White box background */
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 16px; /* More rounded for modern look */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Softer shadow */
+    border: 1px solid rgba(0,0,0,0.02);
+}
+
+.button {
+    font-family: 'Prompt', sans-serif;
+    font-weight: 500;
 }
 
 .button.is-primary {
-    background-color: #d4ac0d; /* Gold button */
+    background-color: #48c774; /* Change from Gold to Green for Health/Freshness */
     border-color: transparent;
+    color: #fff;
 }
 
 .button.is-primary:hover {
-    background-color: #b89700;
+    background-color: #3ec46d;
+    box-shadow: 0 4px 12px rgba(72, 199, 116, 0.3);
+}
+
+/* Make inputs look cleaner */
+.input, .textarea, .select select {
+    box-shadow: none;
+    border-color: #e0e0e0;
+    border-radius: 8px;
+    font-family: 'Prompt', sans-serif;
+}
+
+.input:focus, .textarea:focus, .select select:focus {
+    border-color: #48c774;
+    box-shadow: 0 0 0 2px rgba(72, 199, 116, 0.1);
 }
 
 .footer {

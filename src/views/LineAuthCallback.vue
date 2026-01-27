@@ -13,45 +13,45 @@
 </template>
 
 <script>
-import { useAuthStore } from '../stores/auth';
-import { mapStores } from 'pinia';
+import { useAuthStore } from '../stores/auth'
+import { mapStores } from 'pinia'
 
 export default {
     data() {
         return {
             isLoading: true,
             error: null,
-        };
+        }
     },
     computed: {
         ...mapStores(useAuthStore),
     },
     async created() {
-        const query = this.$route.query;
-        
+        const query = this.$route.query
+
         if (query.error) {
-            this.error = `${query.error}: ${query.error_description}`;
-            this.isLoading = false;
-            return;
+            this.error = `${query.error}: ${query.error_description}`
+            this.isLoading = false
+            return
         }
 
         if (!query.code || !query.state) {
-            this.error = 'Invalid callback from LINE. Missing code or state.';
-            this.isLoading = false;
-            return;
+            this.error = 'Invalid callback from LINE. Missing code or state.'
+            this.isLoading = false
+            return
         }
 
         try {
-            await this.authStore.finishDesktopLineLogin(query.code, query.state);
+            await this.authStore.finishDesktopLineLogin(query.code, query.state)
             // On successful login, the authStore's onAuthStateChanged listener
             // will set the user, and we can navigate to the dashboard.
-            this.$router.push('/dashboard');
+            this.$router.push('/dashboard')
         } catch (err) {
-            this.error = `An error occurred during login: ${err.message}`;
-            this.isLoading = false;
+            this.error = `An error occurred during login: ${err.message}`
+            this.isLoading = false
         }
     },
-};
+}
 </script>
 
 <style scoped>

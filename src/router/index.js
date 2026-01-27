@@ -32,7 +32,7 @@ const router = createRouter({
         {
             path: '/line-callback',
             name: 'line-auth-callback',
-            component: LineAuthCallback, 
+            component: LineAuthCallback,
         },
         {
             path: '/tracking',

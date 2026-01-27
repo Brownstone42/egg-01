@@ -1,461 +1,807 @@
 <template>
-    <div class="container">
-        <h1 class="title">Subscription Details</h1>
-        <div class="box">
-            <div class="field">
-                <label class="label">Selected Pack</label>
-                <div class="control">
-                    <input class="input" type="text" :value="selectedPack" readonly />
-                </div>
-            </div>
-
-            <div class="field">
-                <label class="label">Recipient Name</label>
-                <div class="control">
-                    <input
-                        class="input"
-                        :class="{ 'is-danger': errors.recipientName }"
-                        v-model="formData.recipientName"
-                        type="text"
-                        placeholder="e.g. John Doe"
-                    />
-                </div>
-            </div>
-
-            <!-- Phone Number Section -->
-            <div class="field">
-                <label class="label">Phone Number</label>
-                <div class="control">
-                    <input
-                        class="input"
-                        :class="{ 'is-danger': errors.phoneNumber }"
-                        v-model="formData.phoneNumber"
-                        type="tel"
-                        placeholder="+66812345678"
-                    />
-                </div>
-                <p class="help is-danger" v-if="errors.phoneNumber">Phone number is required.</p>
-            </div>
-
-            <div class="field">
-                <label class="label">Delivery Schedule</label>
-                <div class="control">
-                    <div class="select" :class="{ 'is-danger': errors.deliverySchedule }">
-                        <select v-model="formData.deliverySchedule">
-                            <option disabled value="">Please select one</option>
-                            <option>Wednesday Morning (07:00-10:00)</option>
-                            <option>Wednesday Evening (17:00-20:00)</option>
-                            <option>Sunday Morning (07:00-10:00)</option>
-                            <option>Sunday Evening (17:00-20:00)</option>
-                        </select>
+    <div class="container is-max-desktop py-6">
+        <div class="columns is-centered">
+            <div class="column is-8">
+                <!-- Header -->
+                <div class="level mb-5">
+                    <div class="level-left">
+                        <h1 class="title is-2 has-text-weight-bold">Checkout</h1>
                     </div>
                 </div>
-            </div>
 
-            <google-map
-                v-model="formData.deliveryAddress"
-                :error="errors.deliveryAddress"
-            ></google-map>
-
-            <div class="field">
-                <label class="label">Note to Driver (Optional)</label>
-                <div class="control">
-                    <textarea
-                        class="textarea"
-                        v-model="formData.noteToDriver"
-                        placeholder="e.g. Please leave the package at the front door. My house number is 123."
-                    ></textarea>
+                <!-- Customer Info Card -->
+                <div class="box checkout-card mb-5">
+                    <h3 class="title is-5 mb-4">Customer</h3>
+                    <div class="columns">
+                        <div class="column is-6">
+                            <div class="field">
+                                <label class="label">Name</label>
+                                <div class="control">
+                                    <input
+                                        class="input"
+                                        type="text"
+                                        v-model="form.name"
+                                        placeholder="Your name"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="column is-6">
+                            <div class="field">
+                                <label class="label">Phone</label>
+                                <div class="control">
+                                    <input
+                                        class="input"
+                                        type="tel"
+                                        v-model="form.phone"
+                                        placeholder="081-234-5678"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-
-            <div class="field">
-                <label class="label">Payment Option</label>
-                <div class="control">
-                    <label class="radio">
-                        <input type="radio" v-model="formData.paymentOption" value="qrcode" />
-                        QR Code
-                    </label>
-                    <label class="radio ml-2">
-                        <input type="radio" v-model="formData.paymentOption" value="creditcard" />
-                        Credit Card
-                    </label>
+                
+                <!-- Delivery Details Card -->
+                 <div class="box checkout-card mb-5">
+                    <h3 class="title is-5 mb-4">Delivery Details</h3>
+                    <div class="columns">
+                        <div class="column is-6">
+                            <div class="field">
+                                <label class="label">Delivery Schedule</label>
+                                <div class="control has-icons-left">
+                                    <div class="select is-fullwidth">
+                                        <select v-model="form.deliverySchedule">
+                                            <option value="" disabled>Select delivery time</option>
+                                            <option value="Wednesday Morning">Wednesday Morning (08:00 - 12:00)</option>
+                                            <option value="Wednesday Evening">Wednesday Evening (17:00 - 20:00)</option>
+                                            <option value="Sunday Morning">Sunday Morning (08:00 - 12:00)</option>
+                                            <option value="Sunday Evening">Sunday Evening (17:00 - 20:00)</option>
+                                        </select>
+                                    </div>
+                                    <div class="icon is-small is-left">
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                         <div class="column is-6">
+                            <div class="field">
+                                <label class="label">Note to Driver</label>
+                                <div class="control has-icons-left">
+                                    <div class="select is-fullwidth">
+                                        <select v-model="form.noteToDriver">
+                                            <option value="" disabled>Select instruction</option>
+                                            <option value="Hang on the fence (แขวนไว้ที่รั้ว)">Hang on the fence (แขวนไว้ที่รั้ว)</option>
+                                            <option value="Leave on the table (วางไว้ที่โต๊ะ)">Leave on the table (วางไว้ที่โต๊ะ)</option>
+                                            <option value="Someone will receive (มีคนรอรับ)">Someone will receive (มีคนรอรับ)</option>
+                                        </select>
+                                    </div>
+                                     <div class="icon is-small is-left">
+                                        <i class="fas fa-comment-alt"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <div v-if="errorMessage" class="notification is-danger">
-                {{ errorMessage }}
-            </div>
 
-            <div class="field">
-                <div class="control">
-                    <button
-                        class="button is-primary"
+                <!-- Address Section Card -->
+                <div class="box checkout-card mb-5">
+                    <h3 class="title is-5 mb-4">Address</h3>
+
+                    <!-- Pin Button -->
+                    <div class="field mb-4">
+                        <label class="label">Address (pin)</label>
+                        <div class="control" @click="openMapModal">
+                            <div
+                                class="button is-white is-fullwidth has-text-left is-justify-content-start pin-button"
+                            >
+                                <span class="icon is-medium has-text-danger mr-2">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </span>
+                                <span class="is-clipped">
+                                    {{
+                                        hasLocation
+                                            ? form.address || 'Location Selected'
+                                            : 'Tap to select location on map'
+                                    }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Address Text Area -->
+                    <div class="field">
+                        <label class="label">Address (text)</label>
+                        <div class="control">
+                            <textarea
+                                class="textarea"
+                                v-model="form.address"
+                                placeholder="House no., street, subdistrict, district, province, postal code"
+                                rows="3"
+                            ></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Items Section Card -->
+                <div class="box checkout-card mb-5">
+                    <div class="level is-mobile mb-4">
+                        <div class="level-left">
+                            <h3 class="title is-5 mb-0">Items</h3>
+                        </div>
+                        <div class="level-right">
+                            <span class="tag is-rounded is-light">{{ items.length }} item{{ items.length > 1 ? 's' : '' }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Selected Plan Items -->
+                    <div v-if="items.length > 0">
+                        <div class="plan-item-row mb-3" v-for="(item, index) in items" :key="index">
+                            <div class="columns is-mobile is-vcentered">
+                                <!-- Radio/Checkbox Placeholder -->
+                                <div class="column is-narrow">
+                                    <div class="item-radio is-selected">
+                                        <span class="icon is-small has-text-white">
+                                            <i class="fas fa-check"></i>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Item Details -->
+                                <div class="column">
+                                    <h4 class="title is-6 mb-1">{{ item.name }}</h4>
+                                    <p class="is-size-7 has-text-grey">
+                                        {{
+                                            item.cycle === 'weekly'
+                                                ? 'Weekly Plan'
+                                                : 'Monthly Plan'
+                                        }}
+                                    </p>
+                                </div>
+
+                                <!-- Price -->
+                                <div class="column is-narrow has-text-right">
+                                    <p class="title is-6 mb-1">฿{{ item.price }}</p>
+                                    <p class="is-size-7 has-text-grey">per item</p>
+                                </div>
+                                
+                                <!-- Delete Button -->
+                                <div class="column is-narrow">
+                                    <button 
+                                        class="button is-small is-danger is-light is-rounded" 
+                                        @click="removeItem(index)"
+                                        :disabled="items.length <= 1"
+                                        title="Remove item"
+                                    >
+                                        <span class="icon is-small">
+                                            <i class="fas fa-trash"></i>
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Add Pack Button -->
+                         <div class="has-text-centered mt-4">
+                            <button class="button is-ghost has-text-primary" @click="openPlanModal">
+                                <span class="icon"><i class="fas fa-plus"></i></span>
+                                <span>Add Pack</span>
+                            </button>
+                        </div>
+                    </div>
+                     <div v-else class="has-text-centered py-4 has-text-grey">
+                        No plan selected. <router-link to="/">Go back to Home</router-link>
+                    </div>
+                </div>
+
+                <!-- Order Summary -->
+                <div class="box checkout-card mb-5">
+                    <div class="columns is-mobile mb-2">
+                        <div class="column"><strong>Subtotal</strong></div>
+                        <div class="column has-text-right">฿{{ subtotal }}</div>
+                    </div>
+                    <!-- Delivery Fee Removed -->
+                    <hr class="my-3">
+                    <div class="columns is-mobile">
+                         <div class="column"><h4 class="title is-5">Total</h4></div>
+                         <div class="column has-text-right"><h4 class="title is-5">฿{{ total }}</h4></div>
+                    </div>
+
+                     <button 
+                        class="button is-primary is-fullwidth is-large is-rounded mt-4 font-weight-bold" 
                         :class="{ 'is-loading': isLoading }"
-                        @click="validateAndPay"
+                        @click="placeOrder"
                     >
-                        Proceed to Payment
+                        Place order
                     </button>
                 </div>
+
             </div>
         </div>
 
-        <!-- Payment Modal / Section -->
-        <div v-if="showPaymentSection" class="modal is-active">
-            <div class="modal-background" @click="closePaymentModal"></div>
-            <div class="modal-content">
-                <div class="box has-text-centered">
-                    <!-- Case 1: Pending (Show QR) -->
-                    <div v-if="paymentStatus === 'pending'">
-                        <h3 class="title is-4">Scan to Pay</h3>
-                        <div v-if="qrCodeUrl">
-                            <figure class="image is-inline-block" style="width: 250px">
-                                <img :src="qrCodeUrl" alt="PromptPay QR Code" />
-                            </figure>
-                            <p class="mt-4 has-text-weight-bold">Amount: {{ amountToPay }} THB</p>
-                            <div
-                                class="is-flex is-justify-content-center is-align-items-center mt-2"
+        <!-- Map Modal -->
+        <div class="modal" :class="{ 'is-active': isMapModalActive }">
+            <div class="modal-background" @click="closeMapModal"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">Select Location</p>
+                </header>
+                <section class="modal-card-body p-0" style="height: 400px; position: relative">
+                    <GoogleMap
+                        v-if="isMapModalActive"
+                        :initial-location="form.location"
+                        @location-selected="onLocationSelected"
+                    />
+                </section>
+                <footer class="modal-card-foot is-justify-content-flex-end">
+                    <button class="button mr-2" @click="closeMapModal">Cancel</button>
+                    <button class="button is-primary" @click="confirmLocation">
+                        Confirm Location
+                    </button>
+                </footer>
+            </div>
+        </div>
+
+        <!-- Plan Selection Modal -->
+        <div class="modal" :class="{ 'is-active': isPlanModalActive }">
+            <div class="modal-background" @click="closePlanModal"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">Select Additional Plan</p>
+                    <button class="delete" aria-label="close" @click="closePlanModal"></button>
+                </header>
+                <section class="modal-card-body">
+                    <!-- Billing Cycle Toggle inside Modal -->
+                    <div class="has-text-centered mb-4">
+                         <div class="billing-toggle">
+                            <span
+                                class="toggle-item"
+                                :class="{ 'is-active': modalBillingCycle === 'weekly' }"
+                                @click="modalBillingCycle = 'weekly'"
                             >
-                                <span class="loader mr-2"></span>
-                                <span class="help has-text-info">Waiting for payment...</span>
-                            </div>
-                            <p class="help is-danger mt-2">QR Code expires in a few minutes.</p>
-                        </div>
-                        <div v-else>
-                            <p>Generating QR Code...</p>
+                                Weekly
+                            </span>
+                            <span
+                                class="toggle-item"
+                                :class="{ 'is-active': modalBillingCycle === 'monthly' }"
+                                @click="modalBillingCycle = 'monthly'"
+                            >
+                                Monthly
+                            </span>
                         </div>
                     </div>
 
-                    <!-- Case 2: Failed/Expired -->
-                    <div v-else-if="paymentStatus === 'failed'">
-                        <span class="icon is-large has-text-danger mb-3">
-                            <i class="fas fa-times-circle fa-3x"></i>
-                        </span>
-                        <h3 class="title is-4 has-text-danger">Payment Failed</h3>
-                        <p class="mb-4">
-                            The payment was not successful or the QR code has expired.
-                        </p>
-                        <button class="button is-primary is-outlined" @click="retryPayment">
-                            Try Again
-                        </button>
+                    <div class="columns is-multiline">
+                        <div class="column is-12" v-for="plan in plansStore.plans" :key="plan.id">
+                            <div class="box plan-selection-box" @click="addPlanFromModal(plan)">
+                                <div class="level is-mobile">
+                                    <div class="level-left">
+                                        <div>
+                                            <p class="title is-5 mb-1">{{ plan.name }}</p>
+                                            <p class="subtitle is-7 has-text-grey">{{ plan.description }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="level-right has-text-right">
+                                        <div>
+                                            <p class="title is-5 has-text-primary mb-0">
+                                                ฿{{ modalBillingCycle === 'weekly' ? plan.priceWeekly : plan.priceMonthly }}
+                                            </p>
+                                            <p class="is-size-7">/ {{ modalBillingCycle === 'weekly' ? 'week' : 'month' }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Payment QR Modal -->
+        <div class="modal" :class="{ 'is-active': isPaymentModalActive }">
+            <div class="modal-background"></div>
+            <div class="modal-content has-text-centered">
+                <div class="box">
+                    <h3 class="title is-4">Scan to Pay</h3>
+                    <p class="subtitle is-6 mb-4">Please scan the QR code to complete your payment.</p>
+                    
+                    <figure class="image is-inline-block" v-if="qrCodeUrl">
+                        <img :src="qrCodeUrl" alt="PromptPay QR Code" style="max-height: 300px;">
+                    </figure>
+                    <div v-else class="p-6">
+                        <button class="button is-loading is-white is-large" style="border: none;"></button>
+                    </div>
+                    
+                    <!-- Manual Check Button Removed -->
+
+                    <p class="has-text-grey is-size-7 mt-2">Checking payment status automatically...</p>
+                    <p class="has-text-danger mt-3 mb-2" v-if="paymentError">{{ paymentError }}</p>
+
+                    <button class="button is-light mt-4" @click="closePaymentModal">Cancel Payment</button>
                 </div>
             </div>
-            <button
-                class="modal-close is-large"
-                aria-label="close"
-                @click="closePaymentModal"
-            ></button>
         </div>
     </div>
 </template>
 
 <script>
-import GoogleMap from '@/components/GoogleMap.vue'
-import { mapStores } from 'pinia'
-import { useAuthStore } from '@/stores/auth'
+import GoogleMap from '../components/GoogleMap.vue'
 import { getAuth } from 'firebase/auth'
+import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp, onSnapshot } from 'firebase/firestore'
+import { usePlansStore } from '../stores/plans'
+import axios from 'axios'
 
 export default {
     components: {
         GoogleMap,
     },
+    setup() {
+        const plansStore = usePlansStore()
+        return { plansStore }
+    },
     data() {
         return {
-            selectedPack: '',
-            omisePublicKey: 'pkey_test_63bghetmlex6v6n314d',
-            amountToPay: 1000,
-
-            formData: {
-                recipientName: '',
-                phoneNumber: '',
-                deliverySchedule: '',
-                deliveryAddress: '',
-                noteToDriver: '',
-                paymentOption: 'qrcode',
+            form: {
+                name: '',
+                phone: '',
+                address: '',
+                location: null,
+                deliverySchedule: '', 
+                noteToDriver: '', 
             },
-            errors: {
-                recipientName: false,
-                phoneNumber: false,
-                deliverySchedule: false,
-                deliveryAddress: false,
-            },
-            errorMessage: '',
+            items: [], 
+            // deliveryFee: 0, // Removed
+            tempLocation: null,
+            tempAddress: '',
+            isMapModalActive: false,
+            isPlanModalActive: false,
+            isPaymentModalActive: false,
+            modalBillingCycle: 'weekly',
+            user: null,
             isLoading: false,
-            showPaymentSection: false,
             qrCodeUrl: null,
-            omiseScriptLoaded: false,
-
-            // Payment Logic
-            currentChargeId: null,
-            pollingInterval: null,
-            paymentStatus: 'pending',
+            paymentError: null,
+            // OMISE CONFIG - Replace with your Actual Public Key
+            omisePublicKey: 'pkey_test_63bghetmlex6v6n314d',
+            currentOrderId: null,
+            currentChargeId: null, 
+            unsubscribeOrderListener: null,
+            paymentPollingInterval: null,
+            isCheckingStatus: false, 
         }
     },
     computed: {
-        ...mapStores(useAuthStore),
-    },
-    watch: {
-        'formData.recipientName'(value) {
-            if (value) this.errors.recipientName = false
+        hasLocation() {
+            return this.form.location !== null
         },
-        'formData.phoneNumber'(value) {
-            if (value) {
-                this.errors.phoneNumber = false
+        subtotal() {
+            return this.items.reduce((sum, item) => sum + Number(item.price), 0)
+        },
+        total() {
+             return this.subtotal // No delivery fee added
+        }
+    },
+    async created() {
+        // Load Omise.js Script
+        this.loadOmiseScript();
+
+        // Retrieve Query Params
+        const { pack, cycle, price } = this.$route.query
+        if (pack && cycle && price) {
+            this.items.push({
+                name: pack,
+                cycle: cycle,
+                price: price
+            })
+            this.modalBillingCycle = cycle;
+        }
+
+        const auth = getAuth()
+        this.user = auth.currentUser
+        if (this.user) {
+            this.form.name = this.user.displayName || ''
+            try {
+                const db = getFirestore()
+                const docRef = doc(db, 'users', this.user.uid)
+                const docSnap = await getDoc(docRef)
+                if (docSnap.exists()) {
+                    const userData = docSnap.data()
+                    if (userData.phoneNumber) this.form.phone = userData.phoneNumber
+                    if (userData.address) this.form.address = userData.address
+                }
+            } catch (e) {
+                console.error('Error fetching user data', e)
             }
-        },
-        'formData.deliverySchedule'(value) {
-            if (value) this.errors.deliverySchedule = false
-        },
-        'formData.deliveryAddress'(value) {
-            if (value) this.errors.deliveryAddress = false
-        },
+        }
     },
-    mounted() {
-        this.selectedPack = this.$route.query.pack || 'No pack selected'
-        this.loadOmiseScript()
-    },
+    // Cleanup listener on destroy
     beforeUnmount() {
-        this.stopPolling()
+        this.cleanupListeners();
     },
     methods: {
         loadOmiseScript() {
-            if (window.Omise) {
-                this.omiseScriptLoaded = true
-                window.Omise.setPublicKey(this.omisePublicKey)
-                return
-            }
-            const script = document.createElement('script')
-            script.src = 'https://cdn.omise.co/omise.js'
+            const script = document.createElement('script');
+            script.src = 'https://cdn.omise.co/omise.js';
             script.onload = () => {
-                this.omiseScriptLoaded = true
-                window.Omise.setPublicKey(this.omisePublicKey)
-            }
-            document.head.appendChild(script)
+                window.Omise.setPublicKey(this.omisePublicKey);
+            };
+            document.head.appendChild(script);
         },
-        async validateAndPay() {
-            this.errorMessage = ''
-            this.showPaymentSection = false
-            let hasError = false
-
-            // Reset errors
-            Object.keys(this.errors).forEach((key) => {
-                this.errors[key] = false
-            })
-
-            if (!this.formData.recipientName) {
-                this.errors.recipientName = true
-                hasError = true
-            }
-            if (!this.formData.phoneNumber) {
-                this.errors.phoneNumber = true
-                hasError = true
-            }
-            if (!this.formData.deliverySchedule) {
-                this.errors.deliverySchedule = true
-                hasError = true
-            }
-            if (!this.formData.deliveryAddress) {
-                this.errors.deliveryAddress = true
-                hasError = true
-            }
-
-            if (hasError) {
-                this.errorMessage = 'Please fill in all required fields.'
-                return
-            }
-
-            if (!this.omiseScriptLoaded) {
-                this.errorMessage = 'Payment system is initializing. Please try again in a moment.'
-                return
-            }
-
-            this.isLoading = true
-            this.paymentStatus = 'pending'
-
-            if (this.formData.paymentOption === 'qrcode') {
-                await this.handlePromptPay()
+        openMapModal() {
+            this.isMapModalActive = true
+        },
+        closeMapModal() {
+            this.isMapModalActive = false
+            this.tempLocation = null
+            this.tempAddress = ''
+        },
+        onLocationSelected(locationData) {
+            this.tempLocation = { lat: locationData.lat, lng: locationData.lng }
+            this.tempAddress = locationData.address
+        },
+        confirmLocation() {
+            if (this.tempLocation) {
+                this.form.location = this.tempLocation
+                if (this.tempAddress) {
+                    this.form.address = this.tempAddress
+                }
+                this.isMapModalActive = false 
             } else {
-                alert('Credit Card implementation coming soon!')
-                this.isLoading = false
+                alert('Please wait for the map to load or select a location.')
             }
         },
-        handlePromptPay() {
-            window.Omise.createSource(
-                'promptpay',
-                {
-                    amount: this.amountToPay * 100,
-                    currency: 'THB',
-                },
-                (statusCode, response) => {
-                    if (statusCode === 200) {
-                        const sourceId = response.id
-                        this.createChargeOnBackend(sourceId, this.amountToPay * 100)
-                    } else {
-                        this.isLoading = false
-                        this.errorMessage = `Payment failed: ${response.message}`
-                    }
-                },
-            )
+        removeItem(index) {
+            if (this.items.length > 1) {
+                this.items.splice(index, 1)
+            }
         },
-        getBackendUrl(functionName) {
-            return `https://asia-southeast1-egg-01-ca15a.cloudfunctions.net/${functionName}`
+        openPlanModal() {
+            this.isPlanModalActive = true
         },
-        async createChargeOnBackend(sourceId, amount) {
+        closePlanModal() {
+            this.isPlanModalActive = false
+        },
+        addPlanFromModal(plan) {
+            const price = this.modalBillingCycle === 'weekly' ? plan.priceWeekly : plan.priceMonthly
+            this.items.push({
+                name: plan.name,
+                cycle: this.modalBillingCycle,
+                price: price
+            })
+            this.closePlanModal()
+        },
+        
+        async placeOrder() {
+            // Validation for new fields
+            if (!this.form.name || !this.form.phone || !this.form.address) {
+                alert('Please fill in all delivery details.')
+                return
+            }
+            if (!this.form.deliverySchedule) {
+                 alert('Please select a delivery schedule.')
+                return
+            }
+            if (!this.form.noteToDriver) {
+                 alert('Please select instructions for the driver.')
+                return
+            }
+            if (this.items.length === 0) {
+                alert('No plan selected.')
+                return
+            }
+
+            this.isLoading = true;
+            this.paymentError = null;
+
             try {
-                const functionUrl = this.getBackendUrl('createCharge')
-
-                // Get Current User (from Firebase Auth directly to be sure)
-                const auth = getAuth()
-                const currentUser = auth.currentUser
-                const userId = currentUser ? currentUser.uid : 'guest_user'
-
-                // Prepare Metadata (Order Info)
-                const orderMetadata = {
-                    userId: userId,
-                    pack: this.selectedPack,
-                    recipientName: this.formData.recipientName,
-                    phoneNumber: this.formData.phoneNumber,
-                    deliverySchedule: this.formData.deliverySchedule,
-                    deliveryAddress: this.formData.deliveryAddress,
-                    noteToDriver: this.formData.noteToDriver,
+                const db = getFirestore()
+                // 1. Create Order in Firestore First (Status: waiting_for_payment)
+                const orderData = {
+                    userId: this.user ? this.user.uid : 'guest',
+                    customer: {
+                        name: this.form.name,
+                        phone: this.form.phone,
+                        address: this.form.address,
+                        location: this.form.location,
+                        note: this.form.noteToDriver 
+                    },
+                    items: this.items.map(item => ({
+                        name: item.name,
+                        cycle: item.cycle,
+                        price: Number(item.price),
+                        quantity: 1
+                    })),
+                    
+                    deliverySchedule: this.form.deliverySchedule,
+                    noteToDriver: this.form.noteToDriver, 
+                    
+                    subtotal: this.subtotal,
+                    // deliveryFee removed
+                    total: this.total,
+                    status: 'waiting_for_payment',
+                    createdAt: serverTimestamp()
                 }
 
-                const res = await fetch(functionUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        source: sourceId,
-                        amount: amount,
-                        currency: 'thb',
-                        metadata: orderMetadata,
-                    }),
-                })
+                const docRef = await addDoc(collection(db, 'orders'), orderData)
+                this.currentOrderId = docRef.id;
+                console.log("Order placed with ID: ", this.currentOrderId);
 
-                if (!res.ok) {
-                    let errorMessage = 'Server error'
+                // Start listening to order status change immediately
+                this.listenForPaymentSuccess(this.currentOrderId);
+
+                // 2. Call Omise to Create Source (PromptPay)
+                if (!window.Omise) {
+                    throw new Error("Omise JS not loaded");
+                }
+
+                const amountInSatang = this.total * 100; // Omise uses Satang
+
+                window.Omise.createSource('promptpay', {
+                    amount: amountInSatang,
+                    currency: 'THB'
+                }, async (statusCode, response) => {
+                    if (statusCode !== 200) {
+                        this.paymentError = response.message;
+                        this.isLoading = false;
+                        alert('Payment Error: ' + response.message);
+                        return;
+                    }
+
+                    const sourceId = response.id;
+
+                    // 3. Call Cloud Function to Create Charge
                     try {
-                        const errorData = await res.json()
-                        errorMessage = errorData.error || errorMessage
-                    } catch (e) {
-                        /* ignore */
+                        // REPLACE WITH YOUR ACTUAL CLOUD FUNCTION URL
+                        const createChargeUrl = 'https://asia-southeast1-egg-01-ca15a.cloudfunctions.net/createCharge'; 
+                        
+                        const chargeResponse = await axios.post(createChargeUrl, {
+                            amount: amountInSatang,
+                            currency: 'thb',
+                            source: sourceId,
+                            metadata: {
+                                orderId: this.currentOrderId,
+                                customerName: this.form.name,
+                                deliverySchedule: this.form.deliverySchedule 
+                            }
+                        });
+
+                        const charge = chargeResponse.data;
+                        this.currentChargeId = charge.id; // STORE CHARGE ID
+                        
+                        // 4. Display QR Code
+                        if (charge.status === 'pending' && charge.source.scannable_code) {
+                            this.qrCodeUrl = charge.source.scannable_code.image.download_uri;
+                            this.isPaymentModalActive = true;
+                            
+                            // *** Start Active Polling (Calling Cloud Function) ***
+                            this.startActivePolling();
+
+                        } else if (charge.status === 'successful') {
+                            this.handlePaymentSuccess();
+                        } else {
+                             // Some other status
+                             this.paymentError = "Unexpected charge status: " + charge.status;
+                        }
+
+                    } catch (err) {
+                        console.error("Charge API Error:", err);
+                        this.paymentError = "Failed to create payment charge.";
+                    } finally {
+                        this.isLoading = false;
                     }
-                    throw new Error(errorMessage)
-                }
+                });
 
-                const charge = await res.json()
-
-                if (charge.source && charge.source.scannable_code) {
-                    this.qrCodeUrl = charge.source.scannable_code.image.download_uri
-                    this.currentChargeId = charge.id
-                    this.showPaymentSection = true
-                    this.paymentStatus = 'pending'
-                    this.startPolling()
-                } else {
-                    throw new Error('QR Code generation failed (No scannable code returned).')
-                }
-            } catch (error) {
-                console.error('Backend error:', error)
-                this.errorMessage = `Failed to process payment: ${error.message}`
-            } finally {
-                this.isLoading = false
+            } catch (e) {
+                console.error("Error placing order: ", e);
+                alert("Failed to place order. Please try again.")
+                this.isLoading = false;
             }
         },
-        startPolling() {
-            this.stopPolling()
-            this.pollingInterval = setInterval(async () => {
-                await this.checkPaymentStatus()
-            }, 5000)
-        },
-        stopPolling() {
-            if (this.pollingInterval) {
-                clearInterval(this.pollingInterval)
-                this.pollingInterval = null
-            }
-        },
-        async checkPaymentStatus() {
-            if (!this.currentChargeId || this.paymentStatus !== 'pending') return
+        listenForPaymentSuccess(orderId) {
+            const db = getFirestore();
+            this.cleanupListeners(); // Cleanup any existing listeners
+            
+            console.log("Starting to listen for order:", orderId);
 
-            try {
-                const functionUrl = this.getBackendUrl('checkChargeStatus')
-                const res = await fetch(functionUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chargeId: this.currentChargeId }),
-                })
-
-                if (res.ok) {
-                    const data = await res.json()
-
-                    if (data.status === 'successful') {
-                        // FIX: Store the ID before clearing it
-                        const confirmedOrderId = this.currentChargeId;
-
-                        this.paymentStatus = 'successful'
-                        this.stopPolling()
-                        this.closePaymentModal() // This sets currentChargeId to null
-
-                        this.$router.push({
-                            name: 'success',
-                            state: {
-                                orderDetails: {
-                                    // Use the stored variable
-                                    orderId: confirmedOrderId,
-                                    pack: this.selectedPack,
-                                    recipientName: this.formData.recipientName,
-                                    phoneNumber: this.formData.phoneNumber,
-                                    deliverySchedule: this.formData.deliverySchedule,
-                                    deliveryAddress: this.formData.deliveryAddress,
-                                    amount: this.amountToPay,
-                                },
-                            },
-                        })
-                    } else if (data.status === 'failed' || data.status === 'expired') {
-                        this.paymentStatus = 'failed'
-                        this.stopPolling()
+            // Method 1: Realtime Listener (Still good to have if Webhook works)
+            this.unsubscribeOrderListener = onSnapshot(doc(db, "orders", orderId), (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    console.log("Realtime Update - Order Status:", data.status);
+                    if (data.status === 'paid' || data.status === 'successful') {
+                        this.handlePaymentSuccess();
                     }
                 }
-            } catch (error) {
-                console.error('Error checking status:', error)
+            }, (error) => {
+                console.error("Listener Error:", error);
+            });
+        },
+        // *** NEW: Active Polling using Cloud Function ***
+        startActivePolling() {
+            if (this.paymentPollingInterval) clearInterval(this.paymentPollingInterval);
+
+            // Poll every 5 seconds
+            this.paymentPollingInterval = setInterval(async () => {
+                if (!this.currentChargeId) return;
+                
+                try {
+                     console.log("Auto-polling status via Cloud Function...");
+                     const checkStatusUrl = 'https://asia-southeast1-egg-01-ca15a.cloudfunctions.net/checkChargeStatus';
+                     const response = await axios.post(checkStatusUrl, {
+                        chargeId: this.currentChargeId
+                     });
+                     
+                     const status = response.data.status;
+                     if (status === 'successful' || status === 'paid') {
+                         this.handlePaymentSuccess();
+                     }
+                } catch (e) {
+                    console.error("Auto-polling error (ignoring):", e);
+                }
+            }, 5000);
+        },
+        // Manual Check Function removed as requested
+        
+        handlePaymentSuccess() {
+             if (this.isPaymentModalActive) {
+                console.log("Payment confirmed! Redirecting...");
+                this.isPaymentModalActive = false;
+                this.cleanupListeners();
+                
+                // Prepare data for Success page
+                const packSummary = this.items.map(i => `${i.name} (${i.cycle})`).join(', ');
+
+                this.$router.push({
+                    name: 'success', // Assuming the route name is 'success'
+                    state: {
+                        orderDetails: {
+                            orderId: this.currentOrderId,
+                            pack: packSummary,
+                            recipientName: this.form.name,
+                            phoneNumber: this.form.phone,
+                            deliveryAddress: this.form.address,
+                            amount: this.total,
+                            deliverySchedule: this.form.deliverySchedule, // Pass schedule
+                            noteToDriver: this.form.noteToDriver // Pass note
+                        }
+                    }
+                });
             }
         },
-        retryPayment() {
-            this.paymentStatus = 'pending'
-            this.qrCodeUrl = null
-            this.handlePromptPay()
+        cleanupListeners() {
+            if (this.unsubscribeOrderListener) {
+                this.unsubscribeOrderListener();
+                this.unsubscribeOrderListener = null;
+            }
+            if (this.paymentPollingInterval) {
+                clearInterval(this.paymentPollingInterval);
+                this.paymentPollingInterval = null;
+            }
         },
         closePaymentModal() {
-            this.showPaymentSection = false
-            this.qrCodeUrl = null
-            this.currentChargeId = null
-            this.paymentStatus = 'pending'
-            this.stopPolling()
-        },
+            this.isPaymentModalActive = false;
+            this.cleanupListeners();
+        }
     },
 }
 </script>
 
 <style scoped>
-.container {
-    padding: 2rem;
+.checkout-card {
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f0f0f0;
 }
-.select.is-danger select {
-    color: #363636;
+
+.pin-button {
+    border: 1px solid #dbdbdb;
+    border-radius: 8px;
+    height: auto;
+    padding: 12px 16px;
+    transition: all 0.2s;
 }
-.loader {
-    border: 4px solid #f3f3f3; /* Light grey */
-    border-top: 4px solid #3498db; /* Blue */
+
+.pin-button:hover {
+    border-color: #b5b5b5;
+    background-color: #f9f9f9;
+}
+
+.modal-card {
+    width: 90%;
+    max-width: 600px;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.input,
+.textarea {
+    border-radius: 8px;
+    box-shadow: none;
+    border-color: #dbdbdb;
+}
+
+.input:focus,
+.textarea:focus {
+    border-color: #48c774;
+    box-shadow: 0 0 0 0.125em rgba(72, 199, 116, 0.25);
+}
+
+/* Margin helper */
+.mr-2 {
+    margin-right: 0.75rem !important;
+}
+
+/* Item Styles */
+.plan-item-row {
+    padding: 1rem;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+}
+
+.item-radio {
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    animation: spin 2s linear infinite;
-    display: inline-block;
+    border: 2px solid #dbdbdb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
+
+.item-radio.is-selected {
+    background-color: #48c774;
+    border-color: #48c774;
+}
+
+.font-weight-bold {
+    font-weight: bold;
+}
+
+/* Billing Toggle Styling in Modal */
+.billing-toggle {
+    background: #e0e0e0;
+    display: inline-flex;
+    padding: 4px;
+    border-radius: 50px;
+    position: relative;
+    cursor: pointer;
+}
+
+.toggle-item {
+    padding: 8px 24px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #666;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+}
+
+.toggle-item.is-active {
+    background: white;
+    color: #000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Plan Selection Box inside Modal */
+.plan-selection-box {
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+.plan-selection-box:hover {
+    border-color: #48c774;
+    background-color: #f9fdfa;
+}
+
+/* Payment Modal */
+.modal-content .box {
+    border-radius: 16px;
+    padding: 2rem;
 }
 </style>

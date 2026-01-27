@@ -36,8 +36,8 @@
 
             <div class="buttons is-centered mt-6">
                 <!-- Link to Public Tracking Page with Order ID -->
-                <router-link 
-                    :to="{ path: '/tracking', query: { orderId: orderDetails.orderId } }" 
+                <router-link
+                    :to="{ path: '/tracking', query: { orderId: orderDetails.orderId } }"
                     class="button is-primary is-medium is-fullwidth"
                 >
                     Track My Order

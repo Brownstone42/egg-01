@@ -24,7 +24,9 @@
             <div class="navbar-start">
                 <!-- Mobile Profile Section (Visible only on Touch/Mobile) -->
                 <template v-if="authStore.user">
-                    <div class="navbar-item is-flex is-align-items-center is-hidden-desktop has-background-light">
+                    <div
+                        class="navbar-item is-flex is-align-items-center is-hidden-desktop has-background-light"
+                    >
                         <figure class="image is-24x24 mr-2" v-if="authStore.user.photoURL">
                             <img
                                 class="is-rounded"
@@ -37,7 +39,9 @@
                         </span>
                         <span class="has-text-weight-bold">
                             {{ authStore.user.displayName || authStore.user.phoneNumber }}
-                            <span v-if="isLineLogin" class="tag is-success is-light ml-2">LINE</span>
+                            <span v-if="isLineLogin" class="tag is-success is-light ml-2"
+                                >LINE</span
+                            >
                         </span>
                     </div>
                 </template>
@@ -80,7 +84,7 @@
                             >
                         </span>
                     </div>
-                    
+
                     <!-- Logout Button (Hidden in LIFF) -->
                     <div class="navbar-item" v-if="!isLiffView">
                         <div class="buttons">
@@ -223,7 +227,7 @@ export default {
     computed: {
         ...mapStores(useAuthStore),
         isLineLogin() {
-            return this.authStore.user?.providerData.some(p => p.providerId === 'custom');
+            return this.authStore.user?.providerData.some((p) => p.providerId === 'custom')
         },
     },
     watch: {
@@ -259,9 +263,9 @@ export default {
             this.errorMessage = ''
             try {
                 // UPDATED: Call the central handler
-                await this.authStore.handleLineLogin(); 
+                await this.authStore.handleLineLogin()
             } catch (error) {
-                this.errorMessage = 'Could not initiate LINE Login: ' + error.message;
+                this.errorMessage = 'Could not initiate LINE Login: ' + error.message
             }
         },
         startOtpLogin() {

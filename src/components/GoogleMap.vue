@@ -1,53 +1,36 @@
 <template>
-    <div class="field">
-        <label class="label">Delivery Address</label>
-
-        <!-- Search Box -->
-        <div class="control mb-3">
+    <div class="map-layout">
+        <!-- Search Box (Placed above map) -->
+        <div class="search-container">
             <input
                 ref="searchInput"
-                class="input"
+                class="input is-rounded search-input"
                 type="text"
                 placeholder="Search for a location..."
             />
         </div>
 
         <!-- Map Container -->
-        <div class="map-container mb-3" style="position: relative; height: 400px">
+        <div class="map-container">
             <GMap
                 ref="mapRef"
                 :api-key="apiKey"
-                style="width: 100%; height: 100%"
+                class="google-map"
                 :center="center"
                 :zoom="15"
-                :disable-default-ui="false"
+                :disable-default-ui="true"
                 @center_changed="onCenterChanged"
                 @idle="onIdle"
             >
-                <!-- เราไม่ใช้ Marker ปกติ แต่จะใช้หมุดลอยอยู่ตรงกลาง (Fixed Center Pin) -->
             </GMap>
 
-            <!-- หมุดกลางจอ (Center Pin) -->
-            <div class="center-marker">
+            <!-- Center Pin -->
+            <div class="center-pin">
                 <span class="icon is-large has-text-danger">
                     <i class="fas fa-map-marker-alt fa-3x"></i>
                 </span>
             </div>
         </div>
-
-        <!-- Address Output (Read-only or editable) -->
-        <div class="control">
-            <input
-                class="input"
-                :class="{ 'is-danger': error }"
-                :value="modelValue"
-                @input="$emit('update:modelValue', $event.target.value)"
-                type="text"
-                placeholder="Address will appear here..."
-                readonly
-            />
-        </div>
-        <p v-if="error" class="help is-danger">Please select a valid address.</p>
     </div>
 </template>
 
@@ -60,109 +43,133 @@ export default {
         GMap,
     },
     props: {
-        modelValue: {
-            type: String,
-            default: '',
-        },
-        error: {
-            type: Boolean,
-            default: false,
+        initialLocation: {
+            type: Object,
+            default: null,
         },
     },
-    emits: ['update:modelValue', 'update:coordinates'],
+    emits: ['location-selected'],
     data() {
         return {
             apiKey: 'AIzaSyA5kC8KaF_zYamu764W4vHrsx0vFqnV-BU',
-            center: { lat: 13.7563, lng: 100.5018 }, // Default Bangkok
-            currentCenter: { lat: 13.7563, lng: 100.5018 },
+            center: this.initialLocation || { lat: 13.7563, lng: 100.5018 }, // Default Bangkok
+            geocoder: null,
+            isDragging: false,
         }
     },
+    mounted() {
+        this.waitForGoogleMaps()
+    },
     methods: {
-        onCenterChanged() {
-            const mapInstance = this.$refs.mapRef?.map
-            if (mapInstance) {
-                const c = mapInstance.getCenter()
-                this.currentCenter = { lat: c.lat(), lng: c.lng() }
-            }
-        },
-        async onIdle() {
-            const mapInstance = this.$refs.mapRef?.map
-            if (!mapInstance) return
-
-            // Update final coordinates to parent
-            this.$emit('update:coordinates', this.currentCenter)
-
-            // Reverse Geocoding
-            try {
+        waitForGoogleMaps() {
+            const interval = setInterval(() => {
                 if (window.google && window.google.maps) {
-                    const geocoder = new google.maps.Geocoder()
-                    const response = await geocoder.geocode({ location: this.currentCenter })
+                    clearInterval(interval)
+                    this.initServices()
+                }
+            }, 100)
+        },
+        initServices() {
+            this.geocoder = new google.maps.Geocoder()
+            const input = this.$refs.searchInput
+            const searchBox = new google.maps.places.SearchBox(input)
 
-                    if (response.results[0]) {
-                        const address = response.results[0].formatted_address
-                        this.$emit('update:modelValue', address)
+            searchBox.addListener('places_changed', () => {
+                const places = searchBox.getPlaces()
+                if (places.length == 0) return
+
+                const place = places[0]
+                if (!place.geometry || !place.geometry.location) return
+
+                if (this.$refs.mapRef && this.$refs.mapRef.map) {
+                    const map = this.$refs.mapRef.map
+                    if (place.geometry.viewport) {
+                        map.fitBounds(place.geometry.viewport)
+                    } else {
+                        map.setCenter(place.geometry.location)
+                        map.setZoom(17)
                     }
                 }
-            } catch (e) {
-                console.error('Geocoder failed:', e)
-            }
-        },
-        initAutocomplete() {
-            if (!window.google || !window.google.maps || !window.google.maps.places) {
-                setTimeout(this.initAutocomplete, 500)
-                return
-            }
-
-            const searchInput = this.$refs.searchInput
-            const autocomplete = new google.maps.places.Autocomplete(searchInput, {
-                fields: ['geometry', 'formatted_address'],
             })
 
-            autocomplete.addListener('place_changed', () => {
-                const place = autocomplete.getPlace()
+            // เพิ่มบรรทัดนี้: ส่งค่า Location เริ่มต้นออกไปทันทีที่โหลดเสร็จ
+            this.updateLocationInfo(this.center.lat, this.center.lng)
+        },
+        onCenterChanged() {
+            this.isDragging = true
+        },
+        onIdle() {
+            this.isDragging = false
+            if (this.$refs.mapRef && this.$refs.mapRef.map) {
+                const map = this.$refs.mapRef.map
+                const center = map.getCenter()
+                const lat = center.lat()
+                const lng = center.lng()
 
-                if (!place.geometry || !place.geometry.location) {
-                    return // User entered name but didn't select suggestion
-                }
+                this.updateLocationInfo(lat, lng)
+            }
+        },
+        updateLocationInfo(lat, lng) {
+            if (!this.geocoder) return
 
-                const mapInstance = this.$refs.mapRef.map
-                // ย้ายแผนที่ไปจุดที่เลือก
-                if (place.geometry.viewport) {
-                    mapInstance.fitBounds(place.geometry.viewport)
+            this.geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+                if (status === 'OK' && results[0]) {
+                    const address = results[0].formatted_address
+                    this.$emit('location-selected', { lat, lng, address })
                 } else {
-                    mapInstance.setCenter(place.geometry.location)
-                    mapInstance.setZoom(17)
+                    this.$emit('location-selected', {
+                        lat,
+                        lng,
+                        address: `Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`,
+                    })
                 }
-
-                // อัปเดตค่าทันทีจากผล Search
-                this.$emit('update:modelValue', place.formatted_address)
             })
         },
-    },
-    mounted() {
-        this.initAutocomplete()
     },
 }
 </script>
 
 <style scoped>
-.map-container {
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid #dbdbdb;
+.map-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    background-color: #fff;
 }
 
-.center-marker {
+.search-container {
+    padding: 10px 0;
+    display: flex;
+    justify-content: center;
+    background-color: #fff;
+    z-index: 2;
+}
+
+.search-input {
+    width: 90%; /* ไม่เต็มจอ ตามที่ขอ */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border-color: #dbdbdb;
+}
+
+.map-container {
+    position: relative;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.google-map {
+    width: 100%;
+    height: 100%;
+}
+
+.center-pin {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -100%); /* ยกหัวหมุดให้ชี้ที่จุดกึ่งกลางพอดี */
-    z-index: 10;
-    pointer-events: none; /* ให้คลิกทะลุไปโดนแผนที่ได้ */
-}
-
-/* ปรับสี input เวลา error แต่ยังให้อ่านง่าย */
-.input.is-danger {
-    color: #363636;
+    transform: translate(-50%, -100%);
+    z-index: 5;
+    pointer-events: none;
+    margin-top: 18px;
 }
 </style>

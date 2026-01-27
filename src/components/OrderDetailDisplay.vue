@@ -6,8 +6,8 @@
                 <h3 class="title is-4 mb-2">Order Details</h3>
                 <p class="subtitle is-6 has-text-grey">Order ID: {{ order.id }}</p>
             </div>
-            <button 
-                class="button is-small is-info is-light" 
+            <button
+                class="button is-small is-info is-light"
                 @click="copyShareLink"
                 :class="{ 'is-success': copied }"
             >
@@ -40,11 +40,7 @@
 
         <h4 class="title is-5 mt-5 mb-3">Delivery Timeline</h4>
         <div class="timeline" v-if="order.deliveryDates && order.deliveryDates.length > 0">
-            <div
-                class="timeline-item"
-                v-for="(date, index) in order.deliveryDates"
-                :key="index"
-            >
+            <div class="timeline-item" v-for="(date, index) in order.deliveryDates" :key="index">
                 <div class="timeline-marker" :class="getMarkerClass(date)"></div>
                 <div class="timeline-content">
                     <p class="heading">{{ formatDate(date) }}</p>
@@ -52,9 +48,7 @@
                 </div>
             </div>
         </div>
-        <div v-else class="notification is-light">
-            No delivery schedule information available.
-        </div>
+        <div v-else class="notification is-light">No delivery schedule information available.</div>
     </div>
 </template>
 
@@ -75,31 +69,31 @@ export default {
     methods: {
         async copyShareLink() {
             // Construct the full URL using the current origin (works for both localhost and prod)
-            const shareUrl = `${window.location.origin}/tracking?orderId=${this.order.id}`;
-            
+            const shareUrl = `${window.location.origin}/tracking?orderId=${this.order.id}`
+
             try {
-                await navigator.clipboard.writeText(shareUrl);
-                
+                await navigator.clipboard.writeText(shareUrl)
+
                 // Show feedback
-                this.copied = true;
+                this.copied = true
                 setTimeout(() => {
-                    this.copied = false;
-                }, 2000); // Reset after 2 seconds
+                    this.copied = false
+                }, 2000) // Reset after 2 seconds
             } catch (err) {
-                console.error('Failed to copy link:', err);
-                alert('Could not copy link to clipboard.');
+                console.error('Failed to copy link:', err)
+                alert('Could not copy link to clipboard.')
             }
         },
         formatDate(date) {
             if (!date) return '-'
             // Handle Firestore Timestamp or Date object
-            const d = date.toDate ? date.toDate() : new Date(date);
+            const d = date.toDate ? date.toDate() : new Date(date)
             return new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' }).format(d)
         },
         getMarkerClass(date) {
             const now = new Date()
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-            const d = date.toDate ? date.toDate() : new Date(date);
+            const d = date.toDate ? date.toDate() : new Date(date)
             const checkDate = new Date(d.getFullYear(), d.getMonth(), d.getDate())
 
             if (checkDate < today) return 'is-success'
@@ -109,7 +103,7 @@ export default {
         getDeliveryStatusText(date) {
             const now = new Date()
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-            const d = date.toDate ? date.toDate() : new Date(date);
+            const d = date.toDate ? date.toDate() : new Date(date)
             const checkDate = new Date(d.getFullYear(), d.getMonth(), d.getDate())
 
             if (checkDate < today) return 'Delivered'

@@ -139,7 +139,7 @@ exports.lineAuthHandler = functions.region("asia-southeast1").https.onCall(async
     }
 });
 
-// --- Claim Order Function (NEW) ---
+// --- Claim Order Function (UPDATED) ---
 exports.claimOrder = functions.region("asia-southeast1").https.onCall(async (data, context) => {
     // 1. Check if user is authenticated
     if (!context.auth) {
@@ -165,8 +165,13 @@ exports.claimOrder = functions.region("asia-southeast1").https.onCall(async (dat
 
             const orderData = orderDoc.data();
 
-            // 3. Check ownership
-            if (orderData.userId !== 'guest_user') {
+            // 3. Check Payment Status (NEW)
+            if (orderData.status !== 'paid' && orderData.status !== 'successful') {
+                 throw new functions.https.HttpsError('failed-precondition', 'Order must be paid before claiming.');
+            }
+
+            // 4. Check ownership
+            if (orderData.userId !== 'guest' && orderData.userId !== 'guest_user') {
                 if (orderData.userId === uid) {
                     throw new functions.https.HttpsError('already-exists', 'You already own this order.');
                 } else {
@@ -174,7 +179,7 @@ exports.claimOrder = functions.region("asia-southeast1").https.onCall(async (dat
                 }
             }
 
-            // 4. Update ownership
+            // 5. Update ownership
             transaction.update(orderRef, { userId: uid });
         });
 
@@ -191,19 +196,23 @@ exports.claimOrder = functions.region("asia-southeast1").https.onCall(async (dat
 });
 
 
-// --- Omise & Order Functions (Existing, Unchanged) ---
+// --- Omise & Order Functions (Updated) ---
 
 // Helper Function
-const calculateDeliveryDates = (deliveryScheduleStr) => {
+const calculateDeliveryDates = (deliveryScheduleStr, numberOfDeliveries) => {
     const daysMap = {'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6};
-    let targetDay = -1;
-    for (const day in daysMap) {
-        if (deliveryScheduleStr.includes(day)) {
-            targetDay = daysMap[day];
-            break;
+    
+    // Default to Monday if not found
+    let targetDay = 1; 
+    
+    if (deliveryScheduleStr) {
+        for (const day in daysMap) {
+            if (deliveryScheduleStr.includes(day)) {
+                targetDay = daysMap[day];
+                break;
+            }
         }
     }
-    if (targetDay === -1) return [];
 
     const now = new Date();
     const thaiTimeOffset = 7 * 60 * 60 * 1000;
@@ -219,13 +228,30 @@ const calculateDeliveryDates = (deliveryScheduleStr) => {
     firstDeliveryDate.setUTCDate(nowThai.getUTCDate() + daysUntilTarget);
     firstDeliveryDate.setUTCHours(0, 0, 0, 0);
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < numberOfDeliveries; i++) {
         const d = new Date(firstDeliveryDate);
         d.setUTCDate(firstDeliveryDate.getUTCDate() + (i * 7));
         const saveDate = new Date(d.getTime() - thaiTimeOffset);
         dates.push(saveDate);
     }
     return dates;
+};
+
+// Helper to determine total deliveries based on items
+const getTotalDeliveries = (items) => {
+    if (!items || !Array.isArray(items) || items.length === 0) return 4; // Default if no items
+    
+    // Check if any item is monthly.
+    const hasMonthly = items.some(item => {
+        // Safe check for cycle property, handle case insensitive
+        const cycle = item.cycle ? item.cycle.toLowerCase() : '';
+        return cycle === 'monthly';
+    });
+    
+    console.log("Determining deliveries for items:", JSON.stringify(items));
+    console.log("Has Monthly?", hasMonthly);
+
+    return hasMonthly ? 4 : 1;
 };
 
 exports.createCharge = functions.region("asia-southeast1").https.onRequest((req, res) => {
@@ -237,7 +263,7 @@ exports.createCharge = functions.region("asia-southeast1").https.onRequest((req,
 
       const charge = await omise.charges.create({
         amount: amount, currency: currency, source: source,
-        return_uri: "http://localhost:5173/success",
+        return_uri: "http://localhost:5173/success", // Only used for credit card redirect flow
         metadata: metadata || {}
       });
       return res.status(200).send(charge);
@@ -252,20 +278,40 @@ exports.checkChargeStatus = functions.region("asia-southeast1").https.onRequest(
     cors(req, res, async () => {
         if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
         try {
-            const { chargeId } = req.body;
-            if (!chargeId) return res.status(400).send({ error: "Missing chargeId" });
+            // Omise Webhook sends the whole charge object in 'data' field
+            // But if called manually, it might send 'chargeId'
+            let charge = req.body.data;
+            let chargeId = req.body.chargeId;
 
-            const charge = await omise.charges.retrieve(chargeId);
+            if (!charge && chargeId) {
+                // Manual check
+                charge = await omise.charges.retrieve(chargeId);
+            } else if (!charge && !chargeId) {
+                // Try reading directly from body (some webhook formats)
+                charge = req.body;
+            }
+
+            if (!charge || !charge.id) {
+                 return res.status(400).send({ error: "Invalid payload" });
+            }
             
+            chargeId = charge.id;
+            console.log(`Processing charge ${chargeId}, status: ${charge.status}`);
+
             if (charge.status === 'successful') {
-                const orderRef = db.collection('orders').doc(charge.metadata.orderId || chargeId);
+                const orderId = charge.metadata.orderId || chargeId;
+                const orderRef = db.collection('orders').doc(orderId);
                 const doc = await orderRef.get();
+
                 if (!doc.exists) {
+                    // Fallback: This path is risky if we don't have items info.
+                    console.log(`Order ${orderId} not found (created via webhook metadata).`);
                     const orderData = charge.metadata || {};
-                    let deliveryDates = [];
-                    if (orderData.deliverySchedule) {
-                        deliveryDates = calculateDeliveryDates(orderData.deliverySchedule);
-                    }
+                    
+                    // Default to 4 if we really don't know
+                    let numberOfDeliveries = 4; 
+                    let deliveryDates = calculateDeliveryDates(orderData.deliverySchedule, numberOfDeliveries);
+                    
                     await orderRef.set({
                         ...orderData,
                         chargeId: chargeId,
@@ -274,11 +320,37 @@ exports.checkChargeStatus = functions.region("asia-southeast1").https.onRequest(
                         createdAt: admin.firestore.FieldValue.serverTimestamp(),
                         paymentMethod: 'promptpay',
                         deliveryDates: deliveryDates,
-                        remainingDeliveries: 4
+                        remainingDeliveries: numberOfDeliveries
                     });
-                    console.log(`Order saved for charge ${chargeId} with ${deliveryDates.length} delivery dates.`);
                 } else {
-                     console.log(`Order for charge ${chargeId} already exists. Skipping save.`);
+                    // Update existing order
+                    console.log(`Order ${orderId} found. Updating status to paid.`);
+                    
+                    const currentData = doc.data();
+                    
+                    // Always RE-CALCULATE delivery details on payment success
+                    // to ensure they match the selected plan.
+                    
+                    // 1. Determine Schedule (Prefer metadata, then existing data, then default)
+                    const schedule = charge.metadata.deliverySchedule || currentData.deliverySchedule || "Monday";
+                    
+                    // 2. Determine Number of Deliveries based on ITEMS
+                    const numberOfDeliveries = getTotalDeliveries(currentData.items);
+                    
+                    // 3. Calculate Dates
+                    const deliveryDates = calculateDeliveryDates(schedule, numberOfDeliveries);
+
+                    console.log(`Calculated: ${numberOfDeliveries} deliveries starting ${schedule}`);
+
+                    await orderRef.update({
+                        status: 'paid',
+                        chargeId: chargeId,
+                        paidAt: admin.firestore.FieldValue.serverTimestamp(),
+                        deliveryDates: deliveryDates,
+                        remainingDeliveries: numberOfDeliveries,
+                        // Ensure schedule is saved if it came from metadata
+                        deliverySchedule: schedule 
+                    });
                 }
             }
             return res.status(200).send({ status: charge.status });

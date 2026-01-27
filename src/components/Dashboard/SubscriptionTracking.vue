@@ -123,6 +123,8 @@ export default {
             try {
                 const db = getFirestore()
                 const ordersRef = collection(db, 'orders')
+                // Note: Compound queries with orderBy usually require an index in Firestore.
+                // If this fails with "index required", remove orderBy or create the index via console link provided in error.
                 const q = query(
                     ordersRef,
                     where('userId', '==', this.user.uid),
@@ -133,20 +135,37 @@ export default {
 
                 querySnapshot.forEach((doc) => {
                     const data = doc.data()
-                    const deliveryDates = data.deliveryDates
-                        ? data.deliveryDates.map((ts) => (ts.toDate ? ts.toDate() : new Date(ts)))
-                        : []
+                    
+                    // Filter: Only show paid/successful orders
+                    if (data.status === 'paid' || data.status === 'successful') {
+                        const deliveryDates = data.deliveryDates
+                            ? data.deliveryDates.map((ts) => (ts.toDate ? ts.toDate() : new Date(ts)))
+                            : []
 
-                    this.subscriptions.push({
-                        id: doc.id,
-                        ...data,
-                        deliveryDates: deliveryDates,
-                    })
+                        // Map nested data structure to flat structure for display
+                        this.subscriptions.push({
+                            id: doc.id,
+                            status: data.status,
+                            createdAt: data.createdAt,
+                            // Mapped Fields
+                            recipientName: data.customer?.name || data.recipientName || '-',
+                            phoneNumber: data.customer?.phone || data.phoneNumber || '-',
+                            deliveryAddress: data.customer?.address || data.deliveryAddress || '-',
+                            pack: data.items 
+                                 ? data.items.map(i => `${i.name} (${i.cycle})`).join(', ') 
+                                 : (data.pack || '-'),
+                            deliverySchedule: data.deliverySchedule || 'Every Monday',
+                            deliveryDates: deliveryDates,
+                            noteToDriver: data.noteToDriver || data.customer?.note || ''
+                        })
+                    }
                 })
             } catch (error) {
                 console.error('Error fetching subscriptions:', error)
                 if (error.message.includes('index')) {
-                    this.errorMessage = 'System is indexing your data. Please try again later.'
+                    // Fallback if index missing: fetch without sort, then sort in memory (or show index error link in console)
+                    console.warn("Firestore Index missing. Please create one.")
+                    this.errorMessage = 'System is preparing your data structure. Please check console for index creation link.'
                 } else {
                     this.errorMessage = 'Failed to load subscriptions.'
                 }
@@ -162,13 +181,19 @@ export default {
         getNextDelivery(dates) {
             if (!dates || dates.length === 0) return null
             const now = new Date()
-            return dates.find((d) => d >= now) || null
+            // Reset time to start of day for accurate comparison
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            
+            // Find first date that is today or in future
+            return dates.find((d) => {
+                 const checkDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+                 return checkDate >= today;
+            }) || null
         },
         getStatusClass(sub) {
-            if (sub.status === 'paid') return 'is-success is-light'
+            if (sub.status === 'paid' || sub.status === 'successful') return 'is-success is-light'
             return 'is-warning is-light'
         },
-        // Removed duplicated logic that is now in OrderDetailDisplay
         openDetailModal(sub) {
             this.selectedSub = sub
             this.showDetailModal = true
