@@ -8,8 +8,8 @@
             <RouterView />
         </main>
 
-        <!-- Footer is now always visible -->
-        <Footer />
+        <!-- Footer is only visible on Home page -->
+        <Footer v-if="isHomePage" />
     </div>
 </template>
 
@@ -27,22 +27,28 @@ export default {
     computed: {
         // We still need this to map the store
         ...mapStores(useAuthStore),
+        isHomePage() {
+            return this.$route.name === 'home'
+        }
     },
     mounted() {
         // We still need to initialize auth and attempt LIFF login
         this.authStore.init()
-
-        // The logic to decide if login is needed is inside the store now.
         if (isInLiff()) {
-            console.log('App.vue: mounted() - In LIFF, attempting auto-login...')
-            this.authStore.loginWithLiff()
+            // Logic for LIFF initialization if needed
         }
-    },
+    }
 }
 </script>
 
 <style>
-/* No more debug box styles */
+/* Global Styles */
+html,
+body {
+    height: 100%;
+    margin: 0;
+    background-color: #f9f9f9;
+}
 
 .wrapper {
     display: flex;
@@ -54,9 +60,8 @@ export default {
     flex: 1;
 }
 
-/* This class was conditional, now it's permanent */
-.main-content.has-fixed-header {
-    /* Adjust this value based on your actual header height */
-    padding-top: 56px;
+/* Add padding to prevent content from being hidden behind fixed header */
+.has-fixed-header {
+    padding-top: 3.25rem; /* Adjust based on your header height */
 }
 </style>

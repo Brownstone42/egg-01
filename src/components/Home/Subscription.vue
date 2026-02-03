@@ -27,7 +27,8 @@
                 </div>
             </div>
 
-            <div class="columns is-centered is-variable is-4">
+            <!-- Standard Plans -->
+            <div class="columns is-centered is-variable is-4 mb-6">
                 <div class="column is-one-third" v-for="(plan, index) in plansStore.plans" :key="plan.id">
                     <!-- Card Component -->
                     <div
@@ -81,6 +82,36 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Divider with OR -->
+            <div class="is-relative mb-6">
+                <div class="divider-line"></div>
+                <div class="or-text-container has-text-centered">
+                    <span class="or-text has-background-light px-4 py-2 has-text-weight-bold has-text-grey">OR</span>
+                </div>
+            </div>
+
+            <!-- Custom Pack Banner/Link (Moved to bottom) -->
+            <div class="columns is-centered">
+                <div class="column is-8">
+                    <div class="box custom-pack-banner has-background-white has-text-centered is-clickable" @click="goToCustomPack">
+                        <div class="columns is-vcentered">
+                            <div class="column">
+                                <span class="icon is-large has-text-primary mb-2">
+                                    <i class="fas fa-magic fa-2x"></i>
+                                </span>
+                                <h3 class="title is-4 mb-1">Create Your Own Mix!</h3>
+                                <p class="subtitle is-6">Select specific eggs and quantity. Get exactly what you need.</p>
+                            </div>
+                            <div class="column is-narrow">
+                                <button class="button is-primary is-rounded is-outlined">
+                                    Customize Now <i class="fas fa-arrow-right ml-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 </template>
@@ -115,6 +146,9 @@ export default {
             // Only relevant for mobile UX to expand/collapse
             this.activeMobileIndex = index
         },
+        goToCustomPack() {
+            this.$router.push({ name: 'custom-pack' })
+        }
     },
 }
 </script>
@@ -197,6 +231,46 @@ export default {
     color: #555;
     display: flex;
     align-items: center;
+}
+
+/* Divider Styling */
+.divider-line {
+    border-top: 1px solid #dbdbdb;
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 0;
+}
+
+.or-text-container {
+    position: relative;
+    z-index: 1;
+}
+
+.or-text {
+    font-size: 1.2rem;
+    color: #888;
+    background-color: #f9f9f9; /* Match section bg */
+    border-radius: 50px;
+    border: 1px solid #dbdbdb;
+}
+
+/* Custom Pack Banner */
+.custom-pack-banner {
+    border: 2px dashed #48c774;
+    border-radius: 16px;
+    transition: all 0.2s;
+}
+.custom-pack-banner:hover {
+    background-color: #fff;
+    border-style: solid;
+    box-shadow: 0 4px 15px rgba(72, 199, 116, 0.2);
+    transform: scale(1.02);
+}
+.is-clickable {
+    cursor: pointer;
 }
 
 /* --- Mobile Specific Logic --- */

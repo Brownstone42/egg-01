@@ -1,27 +1,55 @@
 <template>
-    <section class="hero is-fullheight-with-navbar hero-banner">
-        <video autoplay loop muted playsinline class="hero-video">
-            <source src="../../assets/egg.mp4" type="video/mp4" />
-        </video>
+    <section class="hero-banner">
+        <div class="video-container">
+            <video 
+                autoplay 
+                loop 
+                muted 
+                playsinline 
+                webkit-playsinline
+                class="hero-video"
+            >
+                <source src="../../assets/egg.mp4" type="video/mp4" />
+            </video>
+            <div class="overlay"></div>
+        </div>
     </section>
 </template>
 
 <style scoped>
 .hero-banner {
     position: relative;
+    width: 100%;
+    /* Use dvh for mobile browsers handling address bar, fallback to vh */
+    height: 100vh;
+    height: 100dvh; 
     overflow: hidden;
-    background-color: black;
+    background-color: #000;
 }
-.hero-video {
+
+.video-container {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    min-width: 100%;
-    min-height: 100%;
-    width: auto;
-    height: auto;
-    transform: translateX(-50%) translateY(-50%);
-    z-index: 0;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.hero-video {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
+    object-position: center;
+    display: block; /* Removes potential bottom space */
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    pointer-events: none;
 }
 </style>

@@ -238,8 +238,8 @@
                 </section>
                 <footer class="modal-card-foot is-justify-content-flex-end">
                     <button class="button mr-2" @click="closeMapModal">Cancel</button>
-                    <button class="button is-primary" @click="confirmLocation">
-                        Confirm Location
+                    <button class="button is-primary" @click="confirmLocation" :disabled="!tempLocation">
+                        {{ tempLocation ? 'Confirm Location' : 'Loading Map...' }}
                     </button>
                 </footer>
             </div>
@@ -432,6 +432,10 @@ export default {
         },
         openMapModal() {
             this.isMapModalActive = true
+            if (this.form.location) {
+                this.tempLocation = { ...this.form.location }
+                this.tempAddress = this.form.address
+            }
         },
         closeMapModal() {
             this.isMapModalActive = false
@@ -449,8 +453,6 @@ export default {
                     this.form.address = this.tempAddress
                 }
                 this.isMapModalActive = false 
-            } else {
-                alert('Please wait for the map to load or select a location.')
             }
         },
         removeItem(index) {

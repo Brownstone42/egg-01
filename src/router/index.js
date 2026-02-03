@@ -1,13 +1,18 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/Home.vue'
 import Subscription from '../views/Subscription.vue'
+import CustomPack from '../views/CustomPack.vue'
 import Success from '../views/Success.vue'
 import Dashboard from '../views/Dashboard.vue'
 import LineAuthCallback from '../views/LineAuthCallback.vue'
-import PublicTracking from '../views/PublicTracking.vue' // Import the new tracking page
+import PublicTracking from '../views/PublicTracking.vue'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
+    scrollBehavior(to, from, savedPosition) {
+        // Always scroll to top
+        return { top: 0 }
+    },
     routes: [
         {
             path: '/',
@@ -18,6 +23,11 @@ const router = createRouter({
             path: '/subscription',
             name: 'subscription',
             component: Subscription,
+        },
+        {
+            path: '/custom-pack',
+            name: 'custom-pack',
+            component: CustomPack,
         },
         {
             path: '/success',
@@ -37,7 +47,7 @@ const router = createRouter({
         {
             path: '/tracking',
             name: 'tracking',
-            component: PublicTracking, // Add the new route
+            component: PublicTracking,
         },
     ],
 })
