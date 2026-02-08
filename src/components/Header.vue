@@ -1,13 +1,15 @@
 <template>
-    <nav class="navbar is-fixed-top" role="navigation" aria-label="main navigation">
+    <nav class="navbar is-fixed-top" :class="{ 'is-transparent-nav': isTransparent, 'is-shrunk': !isTransparent && isHomePage }" role="navigation" aria-label="main navigation">
         <div class="navbar-brand">
-            <router-link to="/" class="navbar-item">
-                <h1 class="title">Egg Subscription</h1>
+            <router-link to="/" class="navbar-item px-4 no-hover">
+                <figure class="image logo-container">
+                    <img :src="logoImg" alt="Egg Subscription Logo">
+                </figure>
             </router-link>
 
             <a
                 role="button"
-                class="navbar-burger"
+                class="navbar-burger no-hover"
                 :class="{ 'is-active': isMenuActive }"
                 @click="toggleMenu"
                 aria-label="menu"
@@ -25,7 +27,7 @@
                 <!-- Mobile Profile Section (Visible only on Touch/Mobile) -->
                 <template v-if="authStore.user">
                     <div
-                        class="navbar-item is-flex is-align-items-center is-hidden-desktop has-background-light"
+                        class="navbar-item is-flex is-align-items-center is-hidden-desktop has-background-light mobile-profile no-hover"
                     >
                         <figure class="image is-24x24 mr-2" v-if="authStore.user.photoURL">
                             <img
@@ -47,15 +49,15 @@
                 </template>
 
                 <template v-if="authStore.user">
-                    <router-link to="/dashboard" class="navbar-item">Dashboard</router-link>
+                    <router-link to="/dashboard" class="navbar-item no-hover">Dashboard</router-link>
                 </template>
 
                 <!-- Tracking Menu Item (Always Visible) -->
-                <router-link to="/tracking" class="navbar-item">Tracking</router-link>
+                <router-link to="/tracking" class="navbar-item no-hover">Tracking</router-link>
             </div>
 
             <div class="navbar-end">
-                <div class="navbar-item" v-if="!authStore.user">
+                <div class="navbar-item no-hover" v-if="!authStore.user">
                     <div class="buttons">
                         <a class="button is-primary" @click="showLoginModal = true">
                             <strong>Login</strong>
@@ -65,7 +67,7 @@
 
                 <template v-if="authStore.user">
                     <!-- Desktop Profile Section (Hidden on Touch/Mobile) -->
-                    <div class="navbar-item is-flex is-align-items-center is-hidden-touch">
+                    <div class="navbar-item is-flex is-align-items-center is-hidden-touch no-hover">
                         <figure class="image is-24x24 mr-2" v-if="authStore.user.photoURL">
                             <img
                                 class="is-rounded"
@@ -86,7 +88,7 @@
                     </div>
 
                     <!-- Logout Button (Hidden in LIFF) -->
-                    <div class="navbar-item" v-if="!isLiffView">
+                    <div class="navbar-item no-hover" v-if="!isLiffView">
                         <div class="buttons">
                             <a class="button is-light" @click="authStore.logout"> Logout </a>
                         </div>
@@ -210,10 +212,18 @@
 import { useAuthStore } from '../stores/auth'
 import { mapStores } from 'pinia'
 import { isInLiff } from '../liff' // Import isInLiff
+import logoImg from '@/assets/logo.png'
 
 export default {
+    props: {
+        isTransparent: {
+            type: Boolean,
+            default: false
+        }
+    },
     data() {
         return {
+            logoImg,
             isMenuActive: false,
             showLoginModal: false,
             loginStep: 'select', // select, phone, otp
@@ -229,6 +239,9 @@ export default {
         isLineLogin() {
             return this.authStore.user?.providerData.some((p) => p.providerId === 'custom')
         },
+        isHomePage() {
+            return this.$route.name === 'home'
+        }
     },
     watch: {
         'authStore.user'(user) {
@@ -309,6 +322,10 @@ export default {
 </script>
 
 <style scoped>
+.navbar {
+    transition: all 0.4s ease;
+}
+
 .button.is-google {
     background-color: #db4437;
     color: white;
@@ -323,5 +340,61 @@ export default {
 }
 .button.is-success:hover {
     background-color: #05b34c;
+}
+
+/* Logo Styling */
+.logo-container {
+    transition: all 0.4s ease-in-out;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo-container img {
+    max-height: 100%;
+    width: auto;
+    transition: all 0.4s ease-in-out;
+}
+
+/* Shrunk Logo State */
+.is-shrunk .logo-container {
+    width: 50px;
+    height: 50px;
+}
+
+/* Remove Hover Effect from Navbar Items */
+.navbar-item.no-hover:hover,
+.navbar-burger.no-hover:hover {
+    background-color: transparent !important;
+}
+
+/* Background for mobile profile section should stay consistent */
+.navbar-item.mobile-profile {
+    color: #4a4a4a !important;
+}
+
+/* Transparent Nav Styles */
+.is-transparent-nav {
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+.is-transparent-nav .navbar-item:not(.mobile-profile),
+.is-transparent-nav .navbar-burger {
+    color: white !important;
+}
+
+.is-transparent-nav .navbar-burger span {
+    background-color: white !important;
+}
+
+/* Reset colors when menu is active on mobile */
+@media screen and (max-width: 1023px) {
+    .is-transparent-nav .navbar-menu .navbar-item {
+        color: #4a4a4a !important;
+    }
 }
 </style>

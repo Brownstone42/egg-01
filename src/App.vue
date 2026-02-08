@@ -1,10 +1,10 @@
 <template>
     <div class="wrapper">
-        <!-- Header is now always visible for navigation -->
-        <Header />
+        <!-- Header is now always visible for navigation, except for Custom Pack page -->
+        <Header v-if="!isCustomPackPage" :isTransparent="isHomePage && isHeaderTransparent" />
 
-        <!-- Apply fixed header padding class permanently -->
-        <main class="main-content has-fixed-header">
+        <!-- Apply fixed header padding class permanently, except for Custom Pack page and Home Page -->
+        <main class="main-content" :class="{ 'has-fixed-header': !isCustomPackPage && !isHomePage }">
             <RouterView />
         </main>
 
@@ -24,11 +24,29 @@ import { mapStores } from 'pinia'
 export default {
     name: 'App',
     components: { Header, Footer, RouterView },
+    data() {
+        return {
+            isHeaderTransparent: true
+        }
+    },
     computed: {
         // We still need this to map the store
         ...mapStores(useAuthStore),
         isHomePage() {
             return this.$route.name === 'home'
+        },
+        isCustomPackPage() {
+            return this.$route.name === 'custom-pack'
+        }
+    },
+    methods: {
+        handleScroll() {
+            if (this.isHomePage) {
+                // Trigger change at 500px scroll depth
+                this.isHeaderTransparent = window.scrollY < 500;
+            } else {
+                this.isHeaderTransparent = false;
+            }
         }
     },
     mounted() {
@@ -37,6 +55,12 @@ export default {
         if (isInLiff()) {
             // Logic for LIFF initialization if needed
         }
+        window.addEventListener('scroll', this.handleScroll);
+        // Call once on mount to set initial state
+        this.handleScroll();
+    },
+    beforeUnmount() {
+        window.removeEventListener('scroll', this.handleScroll);
     }
 }
 </script>
@@ -47,7 +71,6 @@ html,
 body {
     height: 100%;
     margin: 0;
-    background-color: #f9f9f9;
 }
 
 .wrapper {
