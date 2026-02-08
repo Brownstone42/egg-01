@@ -39,10 +39,19 @@ export default {
             return this.$route.name === 'custom-pack'
         }
     },
+    watch: {
+        // Correctly handle state when navigating between pages
+        $route(to) {
+            if (to.name === 'home') {
+                this.handleScroll();
+            } else {
+                this.isHeaderTransparent = false;
+            }
+        }
+    },
     methods: {
         handleScroll() {
-            if (this.isHomePage) {
-                // Trigger change at 500px scroll depth
+            if (this.$route.name === 'home') {
                 this.isHeaderTransparent = window.scrollY < 500;
             } else {
                 this.isHeaderTransparent = false;
@@ -56,8 +65,10 @@ export default {
             // Logic for LIFF initialization if needed
         }
         window.addEventListener('scroll', this.handleScroll);
-        // Call once on mount to set initial state
-        this.handleScroll();
+        // Ensure initial state is set correctly on mount
+        setTimeout(() => {
+            this.handleScroll();
+        }, 100);
     },
     beforeUnmount() {
         window.removeEventListener('scroll', this.handleScroll);
