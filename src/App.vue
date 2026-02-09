@@ -1,7 +1,7 @@
 <template>
     <div class="wrapper">
         <!-- Header is now always visible for navigation, except for Custom Pack page -->
-        <Header v-if="!isCustomPackPage" :isTransparent="isHomePage && isHeaderTransparent" />
+        <Header v-if="!isCustomPackPage" :isTransparent="isHomePage && isHeaderTransparent" :isScrolled="isScrolled" />
 
         <!-- Apply fixed header padding class permanently, except for Custom Pack page and Home Page -->
         <main class="main-content" :class="{ 'has-fixed-header': !isCustomPackPage && !isHomePage }">
@@ -9,7 +9,8 @@
         </main>
 
         <!-- Footer is only visible on Home page -->
-        <Footer v-if="isHomePage" />
+        <!-- <Footer v-if="isHomePage" /> -->
+        <Footer v-if="false" />
     </div>
 </template>
 
@@ -26,7 +27,8 @@ export default {
     components: { Header, Footer, RouterView },
     data() {
         return {
-            isHeaderTransparent: true
+            isHeaderTransparent: true,
+            isScrolled: false
         }
     },
     computed: {
@@ -46,6 +48,7 @@ export default {
                 this.handleScroll();
             } else {
                 this.isHeaderTransparent = false;
+                this.isScrolled = true;
             }
         }
     },
@@ -53,8 +56,10 @@ export default {
         handleScroll() {
             if (this.$route.name === 'home') {
                 this.isHeaderTransparent = window.scrollY < 500;
+                this.isScrolled = window.scrollY >= 500;
             } else {
                 this.isHeaderTransparent = false;
+                this.isScrolled = true;
             }
         }
     },

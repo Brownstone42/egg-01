@@ -4,6 +4,7 @@ body {
     font-family: 'Prompt', sans-serif; /* Set Prompt as default font */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    touch-action: manipulation;
 }
 
 .title,

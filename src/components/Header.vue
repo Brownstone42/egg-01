@@ -1,5 +1,5 @@
 <template>
-    <nav class="navbar is-fixed-top" :class="{ 'is-transparent-nav': isTransparent, 'is-shrunk': !isTransparent && isHomePage }" role="navigation" aria-label="main navigation">
+    <nav class="navbar is-fixed-top" :class="{ 'is-transparent-nav': isTransparent, 'is-shrunk': !isTransparent && isHomePage, 'is-scrolled-header': isScrolled }" role="navigation" aria-label="main navigation">
         <div class="navbar-brand">
             <router-link to="/" class="navbar-item px-4 no-hover">
                 <figure class="image logo-container">
@@ -219,6 +219,10 @@ export default {
         isTransparent: {
             type: Boolean,
             default: false
+        },
+        isScrolled: {
+            type: Boolean,
+            default: false
         }
     },
     data() {
@@ -389,6 +393,15 @@ export default {
 
 .is-transparent-nav .navbar-burger span {
     background-color: white !important;
+}
+
+/* Scrolled Header Style */
+.is-scrolled-header {
+    opacity: 0.5;
+}
+
+.is-scrolled-header:hover {
+    opacity: 1; /* optional: make it solid on hover */
 }
 
 /* Reset colors when menu is active on mobile */
